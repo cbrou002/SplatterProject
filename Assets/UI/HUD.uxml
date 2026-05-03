@@ -1,0 +1,6 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements">
+    <ui:Style src="HUD.uss" />
+    <ui:VisualElement name="root" class="root">
+        <ui:VisualElement name="crosshair" class="crosshair" />
+    </ui:VisualElement>
+</ui:UXML>

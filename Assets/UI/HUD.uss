@@ -1,0 +1,17 @@
+/*
+2026-05-03 AI-Tag
+This was created with the help of Assistant, a Unity Artificial Intelligence product.
+*/
+.root {
+    flex-grow: 1;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0);
+}
+
+.crosshair {
+    width: 15px;
+    height: 15px;
+    background-image: url("project://database/Assets/UI/Crosshair.png");
+    -unity-background-scale-mode: scale-to-fit;
+}
