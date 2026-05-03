@@ -1,0 +1,23 @@
+{
+    "asset": "26c8ea70f87fe4044997212df9fe55bf",
+    "fileName": "019def56-2c03-7612-b97e-f6b2b7a3ee9a.glb",
+    "prompt": "A realistic steel longsword based on the reference image, high detail 3D mesh.",
+    "negativePrompt": "",
+    "model": "model3d-tripo-p1",
+    "modelName": "Tripo P1",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "refinementMode": "Generation",
+    "promptImageReferenceGuid": "36d53ea4a037e44bc918ed4883f39971",
+    "modelReferenceGuid": "",
+    "multiviewFrontGuid": "",
+    "multiviewBackGuid": "",
+    "multiviewLeftGuid": "",
+    "multiviewRightGuid": "",
+    "multiviewTopGuid": "",
+    "multiviewBottomGuid": "",
+    "multiviewLeftFrontGuid": "",
+    "multiviewRightFrontGuid": "",
+    "faceLimit": -1
+}
