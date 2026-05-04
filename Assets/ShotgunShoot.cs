@@ -23,8 +23,39 @@ public class ShotgunShoot : MonoBehaviour
     public int pelletCount = 8;
     public float spreadAngle = 3.0f;
 
+    [Header("Recoil Settings")]
+    public Transform recoilTransform;
+    public Vector3 recoilRotation = new Vector3(15f, 0f, 0f);
+    public Vector3 recoilPosition = new Vector3(0f, 0f, 0.1f);
+    public float snappiness = 10f;
+    public float returnSpeed = 5f;
+
+    private Vector3 currentRotation;
+    private Vector3 targetRotation;
+    private Vector3 currentPosition;
+    private Vector3 targetPosition;
+
+    private Vector3 originalPosition;
+    private Quaternion originalRotation;
+
+    void Start()
+    {
+        if (recoilTransform == null) recoilTransform = transform;
+        originalPosition = recoilTransform.localPosition;
+        originalRotation = recoilTransform.localRotation;
+    }
+
     void Update()
     {
+        // Handle Recoil Return
+        targetRotation = Vector3.Lerp(targetRotation, Vector3.zero, returnSpeed * Time.deltaTime);
+        currentRotation = Vector3.Slerp(currentRotation, targetRotation, snappiness * Time.deltaTime);
+        recoilTransform.localRotation = originalRotation * Quaternion.Euler(currentRotation);
+
+        targetPosition = Vector3.Lerp(targetPosition, Vector3.zero, returnSpeed * Time.deltaTime);
+        currentPosition = Vector3.Lerp(currentPosition, targetPosition, snappiness * Time.deltaTime);
+        recoilTransform.localPosition = originalPosition + currentPosition;
+
         // Support both 'E' and Left Click
         if (Input.GetKeyDown(KeyCode.E) || Input.GetMouseButtonDown(0))
         {
@@ -34,6 +65,10 @@ public class ShotgunShoot : MonoBehaviour
 
     void Shoot()
     {
+        // Apply Recoil
+        targetRotation += new Vector3(recoilRotation.x, Random.Range(-recoilRotation.y, recoilRotation.y), Random.Range(-recoilRotation.z, recoilRotation.z));
+        targetPosition += recoilPosition;
+
         if (audioSource != null && shotgunSound != null)
         {
             audioSource.PlayOneShot(shotgunSound);

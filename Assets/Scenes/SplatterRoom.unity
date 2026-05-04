@@ -1725,6 +1725,11 @@ MonoBehaviour:
   exitWoundMultiplier: 1
   pelletCount: 1
   spreadAngle: 1
+  recoilTransform: {fileID: 0}
+  recoilRotation: {x: 15, y: 0, z: 0}
+  recoilPosition: {x: 0, y: 0, z: -0.1}
+  snappiness: 50
+  returnSpeed: 5
 --- !u!4 &1780726084 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -4382554126983495595, guid: 81bb9eea30387e442899949a80011e55, type: 3}
