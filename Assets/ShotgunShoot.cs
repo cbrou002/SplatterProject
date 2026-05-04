@@ -121,6 +121,7 @@ public class ShotgunShoot : MonoBehaviour
         decalGo.transform.SetParent(hit.collider.transform, true);
 
         DecalProjector projector = decalGo.AddComponent<DecalProjector>();
+        projector.scaleMode = DecalScaleMode.InheritFromHierarchy;
         projector.material = new Material(mat);
         
         // Ensure the decal is on the same layer as the dummy

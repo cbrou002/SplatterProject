@@ -1720,11 +1720,11 @@ MonoBehaviour:
   exitDecalMaterial: {fileID: 2100000, guid: 4d0554df90a394b2d98e92d18217081a, type: 2}
   audioSource: {fileID: 650777491}
   shotgunSound: {fileID: 8300000, guid: a764377339b869e459f5e53fb9258f73, type: 3}
-  baseDecalSize: 0.1
+  baseDecalSize: 0.37
   spreadIntensity: 5
-  exitWoundMultiplier: 1.8
-  pelletCount: 8
-  spreadAngle: 3
+  exitWoundMultiplier: 1
+  pelletCount: 1
+  spreadAngle: 1
 --- !u!4 &1780726084 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -4382554126983495595, guid: 81bb9eea30387e442899949a80011e55, type: 3}
