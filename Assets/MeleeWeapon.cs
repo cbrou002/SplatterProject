@@ -11,6 +11,11 @@ public class MeleeWeapon : MonoBehaviour
     public AudioSource audioSource;
     public AudioClip hitSound;
 
+    [Header("Decal Settings")]
+    public Material slashDecalMaterial;
+    public Material punctureDecalMaterial;
+    public float baseDecalSize = 0.2f;
+
     private bool isSwinging = false;
     private Vector3 originalPos;
     private Quaternion originalRot;
@@ -41,61 +46,61 @@ public class MeleeWeapon : MonoBehaviour
         {
             StartCoroutine(HorizontalSlashRoutine(false)); // Right to Left
         }
-        }
+    }
 
-        IEnumerator HorizontalSlashRoutine(bool leftToRight)
+    IEnumerator HorizontalSlashRoutine(bool leftToRight)
+    {
+        isSwinging = true;
+        float elapsed = 0f;
+        float duration = 0.25f;
+
+        // Horizontal sweep positions relative to originalPos
+        float xDist = 1.0f;
+        Vector3 slashStartPos = originalPos + new Vector3(leftToRight ? -xDist : xDist, 0f, -0.3f);
+        Vector3 slashEndPos = originalPos + new Vector3(leftToRight ? xDist : -xDist, 0f, 0.2f);
+
+        // Reset to original rotation (no rotation necessary as requested)
+        transform.localPosition = slashStartPos;
+        transform.localRotation = originalRot;
+        yield return new WaitForSeconds(0.05f); // Wind up
+
+        bool hitPerformed = false;
+
+        // Slash phase
+        while (elapsed < duration)
         {
-            isSwinging = true;
-            float elapsed = 0f;
-            float duration = 0.25f;
-
-            // Horizontal sweep positions relative to originalPos
-            float xDist = 1.0f;
-            Vector3 slashStartPos = originalPos + new Vector3(leftToRight ? -xDist : xDist, 0f, -0.3f);
-            Vector3 slashEndPos = originalPos + new Vector3(leftToRight ? xDist : -xDist, 0f, 0.2f);
-
-            // Reset to original rotation (no rotation necessary as requested)
-            transform.localPosition = slashStartPos;
-            transform.localRotation = originalRot;
-            yield return new WaitForSeconds(0.05f); // Wind up
-
-            bool hitPerformed = false;
-
-            // Slash phase
-            while (elapsed < duration)
+            float t = elapsed / duration;
+            transform.localPosition = Vector3.Lerp(slashStartPos, slashEndPos, t);
+        
+            // Perform hit when sword is roughly at the center (t ~ 0.4)
+            if (!hitPerformed && t >= 0.4f)
             {
-                float t = elapsed / duration;
-                transform.localPosition = Vector3.Lerp(slashStartPos, slashEndPos, t);
-            
-                // Perform hit when sword is roughly at the center (t ~ 0.4)
-                if (!hitPerformed && t >= 0.4f)
-                {
-                    Vector3 swingDir = (slashEndPos - slashStartPos).normalized;
-                    PerformHit(transform.parent.TransformDirection(swingDir), 1.0f);
-                    hitPerformed = true;
-                }
-
-                elapsed += Time.deltaTime;
-                yield return null;
+                Vector3 swingDir = (slashEndPos - slashStartPos).normalized;
+                PerformHit(transform.parent.TransformDirection(swingDir), 1.0f);
+                hitPerformed = true;
             }
 
-            transform.localPosition = slashEndPos;
-
-            // Return phase
-            elapsed = 0f;
-            while (elapsed < duration)
-            {
-                float t = elapsed / duration;
-                transform.localPosition = Vector3.Lerp(slashEndPos, originalPos, t);
-                elapsed += Time.deltaTime;
-                yield return null;
-            }
-
-            transform.localPosition = originalPos;
-            isSwinging = false;
+            elapsed += Time.deltaTime;
+            yield return null;
         }
 
-        IEnumerator SwingRoutine()
+        transform.localPosition = slashEndPos;
+
+        // Return phase
+        elapsed = 0f;
+        while (elapsed < duration)
+        {
+            float t = elapsed / duration;
+            transform.localPosition = Vector3.Lerp(slashEndPos, originalPos, t);
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        transform.localPosition = originalPos;
+        isSwinging = false;
+    }
+
+    IEnumerator SwingRoutine()
     {
         isSwinging = true;
         
@@ -112,8 +117,7 @@ public class MeleeWeapon : MonoBehaviour
         }
         
         transform.localPosition = targetPos;
-        // For a stab, we want the blood to come out toward the player (following the normal),
-        // so we pass Vector3.zero to signal PerformHit to use the normal directly.
+        // For a stab, we pass Vector3.zero to signal PerformHit to use the puncture decal.
         PerformHit(Vector3.zero, 1.2f);
 
         elapsed = 0f;
@@ -198,6 +202,18 @@ public class MeleeWeapon : MonoBehaviour
                     audioSource.PlayOneShot(hitSound);
                 }
 
+                // Create Wound Decal
+                if (direction == Vector3.zero)
+                {
+                    // Puncture for stabs
+                    CreateWoundDecal(hit, "PunctureWound", punctureDecalMaterial, 0.5f * force, Vector3.up);
+                }
+                else
+                {
+                    // Slash for slashes, oriented in swing direction
+                    CreateWoundDecal(hit, "SlashWound", slashDecalMaterial, 1.0f * force, direction);
+                }
+
                 if (bloodEffectPrefab != null)
                 {
                     // For stabs (direction is zero), use the normal (points toward player).
@@ -234,6 +250,39 @@ public class MeleeWeapon : MonoBehaviour
             }
         }
     }
-}
+
+    void CreateWoundDecal(RaycastHit hit, string name, Material mat, float sizeMult, Vector3 upDirection)
+    {
+        if (mat == null) return;
+
+        GameObject decalGo = new GameObject(name);
+        float effectiveSize = baseDecalSize * sizeMult;
+        float projectionDepth = 0.2f;
+
+        // Position slightly outside surface
+        decalGo.transform.position = hit.point + hit.normal * 0.05f; 
+        
+        // Rotation: Look INTO the surface, with Up aligned to the swing direction
+        // We use LookRotation with the swing direction as the "up" vector to orient the slash
+        decalGo.transform.rotation = Quaternion.LookRotation(-hit.normal, upDirection);
+
+        // Parent first, then set local scale to ensure it inherits from hierarchy
+        decalGo.transform.SetParent(hit.collider.transform, true);
+        decalGo.transform.localScale = new Vector3(effectiveSize, effectiveSize, projectionDepth);
+
+        UnityEngine.Rendering.Universal.DecalProjector projector = decalGo.AddComponent<UnityEngine.Rendering.Universal.DecalProjector>();
+        projector.scaleMode = UnityEngine.Rendering.Universal.DecalScaleMode.InheritFromHierarchy;
+        projector.material = new Material(mat);
+        
+        decalGo.layer = hit.collider.gameObject.layer;
+        projector.size = new Vector3(1, 1, 1); 
+        projector.fadeFactor = 1.0f;
+
+        if (projector.material.HasProperty("_DrawOrder"))
+            projector.material.SetFloat("_DrawOrder", 100);
+        
+        Destroy(decalGo, 60f);
+        }
+        }
 
 

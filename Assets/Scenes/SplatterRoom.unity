@@ -576,6 +576,9 @@ MonoBehaviour:
   animator: {fileID: 0}
   audioSource: {fileID: 711064827}
   hitSound: {fileID: 8300000, guid: a37f44cbf8c2a7443a3c361efa2f233a, type: 3}
+  slashDecalMaterial: {fileID: 2100000, guid: 3f7161d6bf9e94922b7db288fc0061db, type: 2}
+  punctureDecalMaterial: {fileID: 2100000, guid: 973f926ac24d94b1b88edec580de0ae9, type: 2}
+  baseDecalSize: 0.2
 --- !u!82 &711064827
 AudioSource:
   m_ObjectHideFlags: 0
