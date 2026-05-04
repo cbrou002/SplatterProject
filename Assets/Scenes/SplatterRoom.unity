@@ -1723,6 +1723,8 @@ MonoBehaviour:
   baseDecalSize: 0.1
   spreadIntensity: 5
   exitWoundMultiplier: 1.8
+  pelletCount: 8
+  spreadAngle: 3
 --- !u!4 &1780726084 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -4382554126983495595, guid: 81bb9eea30387e442899949a80011e55, type: 3}

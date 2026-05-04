@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
 using System.Collections.Generic;
+using System.Linq;
 
 public class ShotgunShoot : MonoBehaviour
 {
@@ -14,7 +15,7 @@ public class ShotgunShoot : MonoBehaviour
     public AudioClip shotgunSound;
 
     [Header("Decal Settings")]
-    public float baseDecalSize = 0.12f;
+    public float baseDecalSize = 0.2f;
     public float spreadIntensity = 1.5f;
     public float exitWoundMultiplier = 1.8f;
 
@@ -38,11 +39,10 @@ public class ShotgunShoot : MonoBehaviour
             audioSource.PlayOneShot(shotgunSound);
         }
 
-        List<RaycastHit> entranceHits = new List<RaycastHit>();
+        List<RaycastHit> allHits = new List<RaycastHit>();
 
         for (int i = 0; i < pelletCount; i++)
         {
-            // Calculate spread
             Quaternion spread = Quaternion.Euler(
                 Random.Range(-spreadAngle, spreadAngle),
                 Random.Range(-spreadAngle, spreadAngle),
@@ -52,48 +52,44 @@ public class ShotgunShoot : MonoBehaviour
             Vector3 direction = spread * fpsCamera.transform.forward;
             Ray ray = new Ray(fpsCamera.transform.position, direction);
 
-            // Find all hits along the path
-            RaycastHit[] hits = Physics.RaycastAll(ray, range);
-            System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
-
-            foreach (var hit in hits)
+            if (Physics.Raycast(ray, out RaycastHit hit, range))
             {
                 if (hit.collider.CompareTag("Dummy"))
                 {
-                    entranceHits.Add(hit);
-                    break; // Only first dummy hit per pellet
+                    allHits.Add(hit);
                 }
             }
         }
 
-        if (entranceHits.Count > 0)
+        if (allHits.Count > 0)
         {
-            // 1. Spawn exactly ONE blood effect at the closest hit point
-            RaycastHit closestHit = entranceHits[0];
-            float minDist = closestHit.distance;
-            foreach (var h in entranceHits)
-            {
-                if (h.distance < minDist)
-                {
-                    minDist = h.distance;
-                    closestHit = h;
-                }
-            }
-
+            // 1. Blood Effect: Exactly ONE per shot at the closest hit
+            RaycastHit closestOverall = allHits.OrderBy(h => h.distance).First();
             if (bloodEffectPrefab != null)
             {
-                // Instantiate slightly away from surface to prevent clipping
-                Instantiate(bloodEffectPrefab, closestHit.point + closestHit.normal * 0.05f, Quaternion.LookRotation(closestHit.normal));
+                Instantiate(bloodEffectPrefab, closestOverall.point + closestOverall.normal * 0.05f, Quaternion.LookRotation(closestOverall.normal));
             }
 
-            // 2. Process all decals
-            foreach (var hit in entranceHits)
-            {
-                CreateWoundDecal(hit, "EntranceWound", entranceDecalMaterial, 1.0f, hit.distance);
+            // 2. Wounds: One entrance and one exit per hit body part (collider)
+            var hitGroups = allHits.GroupBy(h => h.collider);
 
-                // Exit Search: Cast back from well behind the entrance
-                Vector3 rayDir = (hit.point - fpsCamera.transform.position).normalized;
-                Vector3 backRayStart = hit.point + rayDir * 1.5f;
+            foreach (var group in hitGroups)
+            {
+                Collider hitCollider = group.Key;
+                
+                // Find hit in group closest to the average point
+                Vector3 avgPoint = Vector3.zero;
+                foreach (var h in group) avgPoint += h.point;
+                avgPoint /= group.Count();
+
+                RaycastHit mainHit = group.OrderBy(h => Vector3.Distance(h.point, avgPoint)).First();
+
+                // Entrance Wound
+                CreateWoundDecal(mainHit, "EntranceWound", entranceDecalMaterial, 1.0f, mainHit.distance);
+
+                // Exit Wound: Search through the collider
+                Vector3 rayDir = (mainHit.point - fpsCamera.transform.position).normalized;
+                Vector3 backRayStart = mainHit.point + rayDir * 1.5f;
                 Ray backRay = new Ray(backRayStart, -rayDir);
                 
                 RaycastHit[] backwardHits = Physics.RaycastAll(backRay, 1.6f);
@@ -101,15 +97,10 @@ public class ShotgunShoot : MonoBehaviour
 
                 foreach (var bHit in backwardHits)
                 {
-                    // The first Dummy we hit from the back that is NOT the same surface as the entrance
-                    if (bHit.collider.CompareTag("Dummy"))
+                    if (bHit.collider == hitCollider && Vector3.Distance(mainHit.point, bHit.point) > 0.02f)
                     {
-                        // Ensure it's significantly far from the entrance to be an "exit"
-                        if (Vector3.Distance(hit.point, bHit.point) > 0.02f)
-                        {
-                            CreateWoundDecal(bHit, "ExitWound", exitDecalMaterial, exitWoundMultiplier, hit.distance);
-                            break; // Only one exit per pellet
-                        }
+                        CreateWoundDecal(bHit, "ExitWound", exitDecalMaterial, exitWoundMultiplier, mainHit.distance);
+                        break; 
                     }
                 }
             }
@@ -121,17 +112,16 @@ public class ShotgunShoot : MonoBehaviour
         if (mat == null) return;
 
         GameObject decalGo = new GameObject(name);
-        
-        // Parent to the hit collider so it moves with the dummy
         decalGo.transform.SetParent(hit.collider.transform, true);
 
-        // Position slightly outside the surface (1cm) facing it
-        decalGo.transform.position = hit.point + hit.normal * 0.01f;
+        // URP Decal Projectors project along the local Z axis.
+        // We position the projector 0.1m outside the surface and use a 0.5m depth.
+        // This ensures it projects 0.4m into the mesh, handling any thickness or curvature.
+        float worldDepth = 0.5f;
+        decalGo.transform.position = hit.point + hit.normal * 0.1f; 
         decalGo.transform.rotation = Quaternion.LookRotation(-hit.normal);
 
-        // FIX: Counteract parent scale so size is in world units.
-        // DecalProjector size is relative to transform scale. 
-        // We set localScale to inverse of parent's lossyScale to make lossyScale (1,1,1).
+        // Counteract parent scale
         Vector3 parentScale = hit.collider.transform.lossyScale;
         decalGo.transform.localScale = new Vector3(
             1.0f / Mathf.Max(parentScale.x, 0.0001f),
@@ -140,22 +130,27 @@ public class ShotgunShoot : MonoBehaviour
         );
 
         DecalProjector projector = decalGo.AddComponent<DecalProjector>();
-        
-        // Create instance to allow draw order modification
         projector.material = new Material(mat);
-        if (projector.material.HasProperty("_DrawOrder"))
-            projector.material.SetFloat("_DrawOrder", 50);
+        
+        // Ensure the decal is on the same layer as the dummy
+        decalGo.layer = hit.collider.gameObject.layer;
 
-        float distanceFactor = 1.0f + (shotDistance / range) * spreadIntensity;
-        float effectiveSize = baseDecalSize * sizeMult * distanceFactor;
+        // Size logic
+        float distFactor = 1.0f + (shotDistance / range) * 0.15f;
+        float effectiveSize = baseDecalSize * sizeMult * distFactor;
 
-        // Depth for reliable capture
-        float worldDepth = 0.5f;
         projector.size = new Vector3(effectiveSize, effectiveSize, worldDepth);
+        projector.fadeFactor = 1.0f;
 
-        // Random rotation for variation
+        // Set high draw order to ensure it's visible over the dummy's base texture
+        if (projector.material.HasProperty("_DrawOrder"))
+            projector.material.SetFloat("_DrawOrder", 100);
+
+        // Random rotation for variety
         decalGo.transform.Rotate(Vector3.forward, Random.Range(0f, 360f), Space.Self);
         
+        Debug.Log($"Spawned {name} on {hit.collider.name} at {hit.point}. Size: {effectiveSize}");
+
         Destroy(decalGo, 60f);
     }
-    }
+}
