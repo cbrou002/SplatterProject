@@ -55,23 +55,35 @@ public class ShotgunShoot : MonoBehaviour
                 // 2. Entrance Wound: Exactly where the crosshair is aimed
                 CreateWoundDecal(hit, "EntranceWound", entranceDecalMaterial, 1.0f, hit.distance);
 
-                // 3. Exit Wound: Find the point where the slug leaves the dummy
-                // Cast back from well ahead of the impact point
-                Vector3 backRayStart = hit.point + ray.direction * 1.5f; 
+                // 3. Exit Wound Logic
+                // To find the exit point, we cast a ray from far ahead back towards the impact.
+                // We use a shorter buffer (0.5m) to stay closer to the target and avoid hitting distant objects.
+                Vector3 backRayStart = hit.point + ray.direction * 0.5f; 
                 Ray backRay = new Ray(backRayStart, -ray.direction);
                 
-                RaycastHit[] backwardHits = Physics.RaycastAll(backRay, 1.6f);
+                RaycastHit[] backwardHits = Physics.RaycastAll(backRay, 0.6f);
                 
-                // The first "Dummy" hit from the back is the absolute exit point along the bullet's path
+                // CRITICAL FIX: Prioritize the SAME collider for the exit wound to ensure limb wounds appear correctly.
+                // If the bullet passed through the arm, we want the exit hole ON the arm.
                 var exitHit = backwardHits
-                    .Where(h => h.collider.CompareTag("Dummy"))
+                    .Where(h => h.collider == hit.collider)
                     .OrderBy(h => h.distance)
                     .FirstOrDefault();
 
+                // Fallback: If we didn't hit the same collider (e.g. bullet entered one and left another), 
+                // pick the first dummy collider we see from the back.
+                if (exitHit.collider == null)
+                {
+                    exitHit = backwardHits
+                        .Where(h => h.collider.CompareTag("Dummy"))
+                        .OrderBy(h => h.distance)
+                        .FirstOrDefault();
+                }
+
                 if (exitHit.collider != null)
                 {
-                    // Ensure the exit is actually behind the entrance
-                    if (Vector3.Distance(hit.point, exitHit.point) > 0.05f)
+                    // Ensure the exit is actually behind the entrance and has some thickness
+                    if (Vector3.Distance(hit.point, exitHit.point) > 0.02f)
                     {
                         CreateWoundDecal(exitHit, "ExitWound", exitDecalMaterial, exitWoundMultiplier, hit.distance);
                     }
@@ -85,22 +97,28 @@ public class ShotgunShoot : MonoBehaviour
         if (mat == null) return;
 
         GameObject decalGo = new GameObject(name);
-        decalGo.transform.SetParent(hit.collider.transform, true);
-
-        // URP Decal Projectors project along the local Z axis.
-        // We position the projector 0.1m outside the surface and use a 0.5m depth.
-        // This ensures it projects 0.4m into the mesh, handling any thickness or curvature.
-        float worldDepth = 0.5f;
-        decalGo.transform.position = hit.point + hit.normal * 0.1f; 
+        
+        // Size logic
+        float distFactor = 1.0f + (shotDistance / range) * 0.15f;
+        float effectiveSize = baseDecalSize * sizeMult * distFactor;
+        
+        // CRITICAL FIX for Left/Right Swap and Skewing:
+        // 1. Set position and rotation in world space first.
+        // 2. Set the scale in world space (before parenting).
+        // 3. Parent with worldPositionStays = true. 
+        // Unity will automatically calculate the correct localScale to maintain world proportions.
+        
+        // Position slightly outside surface, rotate to look INTO the surface
+        // We want the projection box to be centered such that most of it is inside the mesh.
+        // With a 0.2m depth, positioning it 0.05m outside results in 0.15m of projection depth.
+        float projectionDepth = 0.2f;
+        decalGo.transform.position = hit.point + hit.normal * 0.05f; 
         decalGo.transform.rotation = Quaternion.LookRotation(-hit.normal);
+        
+        decalGo.transform.localScale = new Vector3(effectiveSize, effectiveSize, projectionDepth);
 
-        // Counteract parent scale
-        Vector3 parentScale = hit.collider.transform.lossyScale;
-        decalGo.transform.localScale = new Vector3(
-            1.0f / Mathf.Max(parentScale.x, 0.0001f),
-            1.0f / Mathf.Max(parentScale.y, 0.0001f),
-            1.0f / Mathf.Max(parentScale.z, 0.0001f)
-        );
+        // Now parent it - Unity handles the scale compensation.
+        decalGo.transform.SetParent(hit.collider.transform, true);
 
         DecalProjector projector = decalGo.AddComponent<DecalProjector>();
         projector.material = new Material(mat);
@@ -108,22 +126,18 @@ public class ShotgunShoot : MonoBehaviour
         // Ensure the decal is on the same layer as the dummy
         decalGo.layer = hit.collider.gameObject.layer;
 
-        // Size logic
-        float distFactor = 1.0f + (shotDistance / range) * 0.15f;
-        float effectiveSize = baseDecalSize * sizeMult * distFactor;
-
-        projector.size = new Vector3(effectiveSize, effectiveSize, worldDepth);
+        // The projector size should match the transform scale we set.
+        // Note: DecalProjector.size X and Y are width/height, Z is depth.
+        projector.size = new Vector3(1, 1, 1); 
         projector.fadeFactor = 1.0f;
 
-        // Set high draw order to ensure it's visible over the dummy's base texture
+        // Set high draw order
         if (projector.material.HasProperty("_DrawOrder"))
             projector.material.SetFloat("_DrawOrder", 100);
 
-        // Random rotation for variety
+        // Random rotation for variety (rotate around local Z)
         decalGo.transform.Rotate(Vector3.forward, Random.Range(0f, 360f), Space.Self);
         
-        Debug.Log($"Spawned {name} on {hit.collider.name} at {hit.point}. Size: {effectiveSize}");
-
         Destroy(decalGo, 60f);
     }
 }
