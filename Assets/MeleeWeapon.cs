@@ -16,6 +16,13 @@ public class MeleeWeapon : MonoBehaviour
     public Material punctureDecalMaterial;
     public float baseDecalSize = 0.2f;
 
+    [Header("Wound Orientation")]
+    [Range(0f, 360f)] public float horizontalDecalRotation = 0f;
+    [Range(0f, 360f)] public float diagonalDecalRotation = 0f;
+    [Range(0f, 360f)] public float punctureDecalRotation = 0f;
+
+    public enum AttackType { Stab, Diagonal, Horizontal }
+
     private bool isSwinging = false;
     private Vector3 originalPos;
     private Quaternion originalRot;
@@ -76,7 +83,7 @@ public class MeleeWeapon : MonoBehaviour
             if (!hitPerformed && t >= 0.4f)
             {
                 Vector3 swingDir = (slashEndPos - slashStartPos).normalized;
-                PerformHit(transform.parent.TransformDirection(swingDir), 1.0f);
+                PerformHit(transform.parent.TransformDirection(swingDir), 1.0f, AttackType.Horizontal);
                 hitPerformed = true;
             }
 
@@ -118,7 +125,7 @@ public class MeleeWeapon : MonoBehaviour
         
         transform.localPosition = targetPos;
         // For a stab, we pass Vector3.zero to signal PerformHit to use the puncture decal.
-        PerformHit(Vector3.zero, 1.2f);
+        PerformHit(Vector3.zero, 1.2f, AttackType.Stab);
 
         elapsed = 0f;
         while (elapsed < duration)
@@ -163,7 +170,7 @@ public class MeleeWeapon : MonoBehaviour
             if (!hitPerformed && t >= 0.4f)
             {
                 Vector3 swingDir = (slashEndPos - slashStartPos).normalized;
-                PerformHit(transform.parent.TransformDirection(swingDir), 1.0f);
+                PerformHit(transform.parent.TransformDirection(swingDir), 1.0f, AttackType.Diagonal);
                 hitPerformed = true;
             }
 
@@ -190,7 +197,7 @@ public class MeleeWeapon : MonoBehaviour
         isSwinging = false;
     }
 
-    void PerformHit(Vector3 direction, float force)
+    void PerformHit(Vector3 direction, float force, AttackType attackType)
     {
         RaycastHit hit;
         if (Physics.Raycast(fpsCamera.transform.position, fpsCamera.transform.forward, out hit, range))
@@ -203,16 +210,18 @@ public class MeleeWeapon : MonoBehaviour
                 }
 
                 // Create Wound Decal
-                if (direction == Vector3.zero)
+                if (attackType == AttackType.Stab)
                 {
                     // Puncture for stabs
-                    CreateWoundDecal(hit, "PunctureWound", punctureDecalMaterial, 0.5f * force, Vector3.up);
+                    CreateWoundDecal(hit, "PunctureWound", punctureDecalMaterial, 0.5f * force, Vector3.up, punctureDecalRotation);
                 }
                 else
                 {
-                    // Slash for slashes, oriented in swing direction
-                    CreateWoundDecal(hit, "SlashWound", slashDecalMaterial, 1.0f * force, direction);
+                    // Slash for slashes, oriented in swing direction with optional manual offset
+                    float rotationOffset = (attackType == AttackType.Horizontal) ? horizontalDecalRotation : diagonalDecalRotation;
+                    CreateWoundDecal(hit, "SlashWound", slashDecalMaterial, 1.0f * force, direction, rotationOffset);
                 }
+
 
                 if (bloodEffectPrefab != null)
                 {
@@ -251,7 +260,7 @@ public class MeleeWeapon : MonoBehaviour
         }
     }
 
-    void CreateWoundDecal(RaycastHit hit, string name, Material mat, float sizeMult, Vector3 upDirection)
+    void CreateWoundDecal(RaycastHit hit, string name, Material mat, float sizeMult, Vector3 upDirection, float rotationOffset)
     {
         if (mat == null) return;
 
@@ -263,8 +272,9 @@ public class MeleeWeapon : MonoBehaviour
         decalGo.transform.position = hit.point + hit.normal * 0.05f; 
         
         // Rotation: Look INTO the surface, with Up aligned to the swing direction
-        // We use LookRotation with the swing direction as the "up" vector to orient the slash
         decalGo.transform.rotation = Quaternion.LookRotation(-hit.normal, upDirection);
+        // Apply manual rotation offset around the projection axis (forward)
+        decalGo.transform.Rotate(Vector3.forward, rotationOffset, Space.Self);
 
         // Parent first, then set local scale to ensure it inherits from hierarchy
         decalGo.transform.SetParent(hit.collider.transform, true);
@@ -282,7 +292,7 @@ public class MeleeWeapon : MonoBehaviour
             projector.material.SetFloat("_DrawOrder", 100);
         
         Destroy(decalGo, 60f);
-        }
-        }
+    }
+    }
 
 
