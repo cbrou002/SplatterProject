@@ -8,6 +8,8 @@ public class MeleeWeapon : MonoBehaviour
     public float damage = 20f;
     public GameObject bloodEffectPrefab;
     public Animator animator;
+    public AudioSource audioSource;
+    public AudioClip hitSound;
 
     private bool isSwinging = false;
     private Vector3 originalPos;
@@ -191,6 +193,11 @@ public class MeleeWeapon : MonoBehaviour
         {
             if (hit.collider.CompareTag("Dummy"))
             {
+                if (audioSource != null && hitSound != null)
+                {
+                    audioSource.PlayOneShot(hitSound);
+                }
+
                 if (bloodEffectPrefab != null)
                 {
                     // For stabs (direction is zero), use the normal (points toward player).
