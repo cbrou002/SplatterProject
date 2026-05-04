@@ -39,68 +39,41 @@ public class ShotgunShoot : MonoBehaviour
             audioSource.PlayOneShot(shotgunSound);
         }
 
-        List<RaycastHit> allHits = new List<RaycastHit>();
+        // Single slug ray from camera center forward
+        Ray ray = new Ray(fpsCamera.transform.position, fpsCamera.transform.forward);
 
-        for (int i = 0; i < pelletCount; i++)
+        if (Physics.Raycast(ray, out RaycastHit hit, range))
         {
-            Quaternion spread = Quaternion.Euler(
-                Random.Range(-spreadAngle, spreadAngle),
-                Random.Range(-spreadAngle, spreadAngle),
-                0
-            );
-            
-            Vector3 direction = spread * fpsCamera.transform.forward;
-            Ray ray = new Ray(fpsCamera.transform.position, direction);
-
-            if (Physics.Raycast(ray, out RaycastHit hit, range))
+            if (hit.collider.CompareTag("Dummy"))
             {
-                if (hit.collider.CompareTag("Dummy"))
+                // 1. Blood Effect: Exactly ONE at the hit point
+                if (bloodEffectPrefab != null)
                 {
-                    allHits.Add(hit);
+                    Instantiate(bloodEffectPrefab, hit.point + hit.normal * 0.05f, Quaternion.LookRotation(hit.normal));
                 }
-            }
-        }
 
-        if (allHits.Count > 0)
-        {
-            // 1. Blood Effect: Exactly ONE per shot at the closest hit
-            RaycastHit closestOverall = allHits.OrderBy(h => h.distance).First();
-            if (bloodEffectPrefab != null)
-            {
-                Instantiate(bloodEffectPrefab, closestOverall.point + closestOverall.normal * 0.05f, Quaternion.LookRotation(closestOverall.normal));
-            }
+                // 2. Entrance Wound: Exactly where the crosshair is aimed
+                CreateWoundDecal(hit, "EntranceWound", entranceDecalMaterial, 1.0f, hit.distance);
 
-            // 2. Wounds: One entrance and one exit per hit body part (collider)
-            var hitGroups = allHits.GroupBy(h => h.collider);
-
-            foreach (var group in hitGroups)
-            {
-                Collider hitCollider = group.Key;
-                
-                // Find hit in group closest to the average point
-                Vector3 avgPoint = Vector3.zero;
-                foreach (var h in group) avgPoint += h.point;
-                avgPoint /= group.Count();
-
-                RaycastHit mainHit = group.OrderBy(h => Vector3.Distance(h.point, avgPoint)).First();
-
-                // Entrance Wound
-                CreateWoundDecal(mainHit, "EntranceWound", entranceDecalMaterial, 1.0f, mainHit.distance);
-
-                // Exit Wound: Search through the collider
-                Vector3 rayDir = (mainHit.point - fpsCamera.transform.position).normalized;
-                Vector3 backRayStart = mainHit.point + rayDir * 1.5f;
-                Ray backRay = new Ray(backRayStart, -rayDir);
+                // 3. Exit Wound: Find the point where the slug leaves the dummy
+                // Cast back from well ahead of the impact point
+                Vector3 backRayStart = hit.point + ray.direction * 1.5f; 
+                Ray backRay = new Ray(backRayStart, -ray.direction);
                 
                 RaycastHit[] backwardHits = Physics.RaycastAll(backRay, 1.6f);
-                System.Array.Sort(backwardHits, (a, b) => a.distance.CompareTo(b.distance));
+                
+                // The first "Dummy" hit from the back is the absolute exit point along the bullet's path
+                var exitHit = backwardHits
+                    .Where(h => h.collider.CompareTag("Dummy"))
+                    .OrderBy(h => h.distance)
+                    .FirstOrDefault();
 
-                foreach (var bHit in backwardHits)
+                if (exitHit.collider != null)
                 {
-                    if (bHit.collider == hitCollider && Vector3.Distance(mainHit.point, bHit.point) > 0.02f)
+                    // Ensure the exit is actually behind the entrance
+                    if (Vector3.Distance(hit.point, exitHit.point) > 0.05f)
                     {
-                        CreateWoundDecal(bHit, "ExitWound", exitDecalMaterial, exitWoundMultiplier, mainHit.distance);
-                        break; 
+                        CreateWoundDecal(exitHit, "ExitWound", exitDecalMaterial, exitWoundMultiplier, hit.distance);
                     }
                 }
             }
