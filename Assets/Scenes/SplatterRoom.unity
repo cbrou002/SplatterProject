@@ -1652,10 +1652,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ShotgunShoot
   fpsCamera: {fileID: 2013205451}
-  range: 50
+  range: 10
   bloodEffectPrefab: {fileID: 1028206983}
+  entranceDecalMaterial: {fileID: 2100000, guid: 4455ec2acbe5e432389f75fe1095e2f2, type: 2}
+  exitDecalMaterial: {fileID: 2100000, guid: 4d0554df90a394b2d98e92d18217081a, type: 2}
   audioSource: {fileID: 650777491}
   shotgunSound: {fileID: 8300000, guid: a764377339b869e459f5e53fb9258f73, type: 3}
+  baseDecalSize: 0.1
+  spreadIntensity: 5
+  exitWoundMultiplier: 1.8
 --- !u!4 &1780726084 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -4382554126983495595, guid: 81bb9eea30387e442899949a80011e55, type: 3}

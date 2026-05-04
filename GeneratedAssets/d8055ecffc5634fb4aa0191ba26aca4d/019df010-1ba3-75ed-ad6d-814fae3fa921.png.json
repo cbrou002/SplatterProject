@@ -1,0 +1,28 @@
+{
+    "asset": "d8055ecffc5634fb4aa0191ba26aca4d",
+    "fileName": "019df010-1ba3-75ed-ad6d-814fae3fa921.png",
+    "prompt": "a single isolated bloody gash wound, jagged edges, deep red blood, no skin visible around the edges, transparent background, minimalist, high contrast, top-down view",
+    "negativePrompt": "",
+    "model": "gemini-3.1-flash",
+    "modelName": "Gemini 3.1 Nano Banana 2",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "refinementMode": "Generation",
+    "pixelateTargetSize": 0,
+    "pixelateKeepImageSize": false,
+    "pixelatePixelBlockSize": 0,
+    "pixelatePixelGridSize": 0,
+    "pixelateMode": 0,
+    "pixelateOutlineThickness": 0,
+    "doodles": {
+        "m_Items": []
+    },
+    "upscaleFactor": 0,
+    "dimensions": {
+        "width": 1024,
+        "height": 1024
+    },
+    "spriteSheet": false,
+    "duration": 0.0
+}

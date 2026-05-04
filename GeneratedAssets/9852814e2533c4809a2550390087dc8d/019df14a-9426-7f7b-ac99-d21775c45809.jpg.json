@@ -1,0 +1,28 @@
+{
+    "asset": "9852814e2533c4809a2550390087dc8d",
+    "fileName": "019df14a-9426-7f7b-ac99-d21775c45809.jpg",
+    "prompt": "roughly spherical bloody flesh wound, deep red and dark black colors only, round impact hole with blood splatters, NO skin texture, NO human skin, minimalist, top-down view, isolated on white background, game decal style",
+    "negativePrompt": "",
+    "model": "flux-2-pro",
+    "modelName": "Flux 2 (Pro)",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "refinementMode": "Generation",
+    "pixelateTargetSize": 0,
+    "pixelateKeepImageSize": false,
+    "pixelatePixelBlockSize": 0,
+    "pixelatePixelGridSize": 0,
+    "pixelateMode": 0,
+    "pixelateOutlineThickness": 0,
+    "doodles": {
+        "m_Items": []
+    },
+    "upscaleFactor": 0,
+    "dimensions": {
+        "width": 1024,
+        "height": 1024
+    },
+    "spriteSheet": false,
+    "duration": 0.0
+}
