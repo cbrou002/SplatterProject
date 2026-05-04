@@ -271,7 +271,7 @@ public class MeleeWeapon : MonoBehaviour
         decalGo.transform.localScale = new Vector3(effectiveSize, effectiveSize, projectionDepth);
 
         UnityEngine.Rendering.Universal.DecalProjector projector = decalGo.AddComponent<UnityEngine.Rendering.Universal.DecalProjector>();
-        projector.scaleMode = UnityEngine.Rendering.Universal.DecalScaleMode.InheritFromHierarchy;
+        projector.scaleMode = UnityEngine.Rendering.Universal.DecalScaleMode.ScaleInvariant;
         projector.material = new Material(mat);
         
         decalGo.layer = hit.collider.gameObject.layer;

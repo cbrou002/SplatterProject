@@ -570,7 +570,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MeleeWeapon
   fpsCamera: {fileID: 2013205451}
-  range: 1.5
+  range: 2
   damage: 20
   bloodEffectPrefab: {fileID: 1028206983}
   animator: {fileID: 0}
