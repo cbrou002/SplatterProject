@@ -192,7 +192,7 @@ projector.material.SetFloat("_DrawOrder", 50);
         GameObject decalGo = new GameObject(name);
         
         // Size logic
-        float distFactor = 1.0f + (shotDistance / range) * 0.15f;
+        float distFactor = 1.0f + (shotDistance / range) * 0.90f;
         float effectiveSize = baseDecalSize * sizeMult * distFactor;
         
         // CRITICAL FIX for Left/Right Swap and Skewing:
