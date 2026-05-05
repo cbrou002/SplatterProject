@@ -129,18 +129,18 @@ public class ShotgunShoot : MonoBehaviour
                     {
                         CreateWoundDecal(exitHit, "ExitWound", exitDecalMaterial, exitWoundMultiplier, hit.distance);
                         
-                        // Exit Splatter (Behind dummy)
-                        CreateSplatter(exitHit.point, ray.direction);
+                        // Exit Splatter: More concentrated (0.1 spread), long range (20m)
+                        CreateSplatter(exitHit.point, ray.direction, 0.1f, 20f);
                     }
                 }
 
-                // Entrance Splatter (In front of dummy / towards shooter)
-                CreateSplatter(hit.point, -ray.direction);
+                // Entrance Splatter: More spread (0.4) but short range (4m) to hit floor/ceiling nearby
+                CreateSplatter(hit.point, -ray.direction, 0.4f, 4f);
                 }
                 }
                 }
 
-                void CreateSplatter(Vector3 origin, Vector3 direction)
+                void CreateSplatter(Vector3 origin, Vector3 direction, float spread, float distance)
                 {
                     if (splatterDecalMaterial == null) return;
 
@@ -148,16 +148,15 @@ public class ShotgunShoot : MonoBehaviour
                     int splatterCount = 3;
                     for (int i = 0; i < splatterCount; i++)
                     {
-                        Vector3 sprayDir = Vector3.Slerp(direction, Random.onUnitSphere, 0.25f).normalized;
+                        Vector3 sprayDir = Vector3.Slerp(direction, Random.onUnitSphere, spread).normalized;
                         float rayOffset = 0.1f;
-                        float rayDist = 20f;
 
-                        if (Physics.Raycast(origin + sprayDir * rayOffset, sprayDir, out RaycastHit hit, rayDist))
+                        if (Physics.Raycast(origin + sprayDir * rayOffset, sprayDir, out RaycastHit hit, distance))
                         {
                             // Ignore the dummy and the player
                             if (hit.collider.CompareTag("Dummy") || hit.collider.CompareTag("Player"))
                             {
-                                if (Physics.Raycast(hit.point + sprayDir * 0.1f, sprayDir, out hit, rayDist - hit.distance))
+                                if (Physics.Raycast(hit.point + sprayDir * 0.1f, sprayDir, out hit, distance - hit.distance))
                                 {
                                     if (hit.collider.CompareTag("Dummy") || hit.collider.CompareTag("Player")) continue;
                                 }
