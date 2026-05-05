@@ -174,10 +174,10 @@ public class ShotgunShoot : MonoBehaviour
                             projector.size = new Vector3(size, size, 1.0f);
                 
                             projector.material = new Material(splatterDecalMaterial);
-                            projector.fadeFactor = Random.Range(0.8f, 1.0f);
+                            projector.fadeFactor = 1.0f;
 
                             if (projector.material.HasProperty("_DrawOrder"))
-                                projector.material.SetFloat("_DrawOrder", 50);
+projector.material.SetFloat("_DrawOrder", 50);
 
                             splatterGo.transform.Rotate(Vector3.forward, Random.Range(0f, 360f), Space.Self);
                             Destroy(splatterGo, 30f);
