@@ -261,38 +261,34 @@ public class MeleeWeapon : MonoBehaviour
     }
 
     void CreateWoundDecal(RaycastHit hit, string name, Material mat, float sizeMult, Vector3 upDirection, float rotationOffset)
-    {
-        if (mat == null) return;
+{
+    if (mat == null) return;
 
-        GameObject decalGo = new GameObject(name);
-        float effectiveSize = baseDecalSize * sizeMult;
-        float projectionDepth = 0.2f;
+    GameObject decalGo = new GameObject(name);
 
-        // Position slightly outside surface
-        decalGo.transform.position = hit.point + hit.normal * 0.05f; 
-        
-        // Rotation: Look INTO the surface, with Up aligned to the swing direction
-        decalGo.transform.rotation = Quaternion.LookRotation(-hit.normal, upDirection);
-        // Apply manual rotation offset around the projection axis (forward)
-        decalGo.transform.Rotate(Vector3.forward, rotationOffset, Space.Self);
+    float projectionDepth = 1f;
 
-        // Parent first, then set local scale to ensure it inherits from hierarchy
-        decalGo.transform.SetParent(hit.collider.transform, true);
-        decalGo.transform.localScale = new Vector3(effectiveSize, effectiveSize, projectionDepth);
+    decalGo.transform.position = hit.point + hit.normal * 0.05f;
+    decalGo.transform.rotation = Quaternion.LookRotation(-hit.normal, upDirection);
+    decalGo.transform.Rotate(Vector3.forward, rotationOffset, Space.Self);
 
-        UnityEngine.Rendering.Universal.DecalProjector projector = decalGo.AddComponent<UnityEngine.Rendering.Universal.DecalProjector>();
-        projector.scaleMode = UnityEngine.Rendering.Universal.DecalScaleMode.ScaleInvariant;
-        projector.material = new Material(mat);
-        
-        decalGo.layer = hit.collider.gameObject.layer;
-        projector.size = new Vector3(1, 1, 1); 
-        projector.fadeFactor = 1.0f;
+    decalGo.transform.SetParent(hit.collider.transform, true);
+    decalGo.transform.localScale = Vector3.one;
 
-        if (projector.material.HasProperty("_DrawOrder"))
-            projector.material.SetFloat("_DrawOrder", 100);
-        
-        Destroy(decalGo, 60f);
-    }
+    var projector = decalGo.AddComponent<UnityEngine.Rendering.Universal.DecalProjector>();
+    projector.scaleMode = UnityEngine.Rendering.Universal.DecalScaleMode.ScaleInvariant;
+    projector.material = new Material(mat);
+
+    decalGo.layer = hit.collider.gameObject.layer;
+
+    projector.size = new Vector3(0.3f * sizeMult, 0.3f * sizeMult, projectionDepth);
+    projector.fadeFactor = 1.0f;
+
+    if (projector.material.HasProperty("_DrawOrder"))
+        projector.material.SetFloat("_DrawOrder", 100);
+
+    Destroy(decalGo, 60f);
+}
     }
 
 
