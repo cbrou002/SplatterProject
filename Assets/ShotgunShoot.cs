@@ -10,6 +10,7 @@ public class ShotgunShoot : MonoBehaviour
     public GameObject bloodEffectPrefab;
     public Material entranceDecalMaterial;
     public Material exitDecalMaterial;
+    public Material splatterDecalMaterial;
 
     public AudioSource audioSource;
     public AudioClip shotgunSound;
@@ -18,6 +19,10 @@ public class ShotgunShoot : MonoBehaviour
     public float baseDecalSize = 0.2f;
     public float spreadIntensity = 1.5f;
     public float exitWoundMultiplier = 1.8f;
+
+    [Header("Splatter Settings")]
+    public float splatterDistance = 5f;
+    public float splatterBaseSize = 1.2f;
 
     [Header("Shotgun Settings")]
     public int pelletCount = 8;
@@ -65,6 +70,7 @@ public class ShotgunShoot : MonoBehaviour
 
     void Shoot()
     {
+        Debug.Log("Shotgun Shoot triggered");
         // Apply Recoil
         targetRotation += new Vector3(recoilRotation.x, Random.Range(-recoilRotation.y, recoilRotation.y), Random.Range(-recoilRotation.z, recoilRotation.z));
         targetPosition += recoilPosition;
@@ -79,6 +85,7 @@ public class ShotgunShoot : MonoBehaviour
 
         if (Physics.Raycast(ray, out RaycastHit hit, range))
         {
+            Debug.Log($"Raycast hit: {hit.collider.gameObject.name} with tag {hit.collider.tag}");
             if (hit.collider.CompareTag("Dummy"))
             {
                 // 1. Blood Effect: Exactly ONE at the hit point
@@ -121,14 +128,66 @@ public class ShotgunShoot : MonoBehaviour
                     if (Vector3.Distance(hit.point, exitHit.point) > 0.02f)
                     {
                         CreateWoundDecal(exitHit, "ExitWound", exitDecalMaterial, exitWoundMultiplier, hit.distance);
+                        
+                        // Exit Splatter (Behind dummy)
+                        CreateSplatter(exitHit.point, ray.direction);
                     }
                 }
-            }
-        }
-    }
 
-    void CreateWoundDecal(RaycastHit hit, string name, Material mat, float sizeMult, float shotDistance)
-    {
+                // Entrance Splatter (In front of dummy / towards shooter)
+                CreateSplatter(hit.point, -ray.direction);
+                }
+                }
+                }
+
+                void CreateSplatter(Vector3 origin, Vector3 direction)
+                {
+                    if (splatterDecalMaterial == null) return;
+
+                    // Create multiple splatters in a cone for better coverage
+                    int splatterCount = 3;
+                    for (int i = 0; i < splatterCount; i++)
+                    {
+                        Vector3 sprayDir = Vector3.Slerp(direction, Random.onUnitSphere, 0.25f).normalized;
+                        float rayOffset = 0.1f;
+                        float rayDist = 20f;
+
+                        if (Physics.Raycast(origin + sprayDir * rayOffset, sprayDir, out RaycastHit hit, rayDist))
+                        {
+                            // Ignore the dummy and the player
+                            if (hit.collider.CompareTag("Dummy") || hit.collider.CompareTag("Player"))
+                            {
+                                if (Physics.Raycast(hit.point + sprayDir * 0.1f, sprayDir, out hit, rayDist - hit.distance))
+                                {
+                                    if (hit.collider.CompareTag("Dummy") || hit.collider.CompareTag("Player")) continue;
+                                }
+                                else continue;
+                            }
+
+                            GameObject splatterGo = new GameObject("SplatterDecal");
+                            splatterGo.transform.position = hit.point + hit.normal * 0.02f;
+                            splatterGo.transform.rotation = Quaternion.LookRotation(-hit.normal);
+                
+                            float size = splatterBaseSize * Random.Range(1.0f, 2.5f);
+                
+                            DecalProjector projector = splatterGo.AddComponent<DecalProjector>();
+                            projector.scaleMode = DecalScaleMode.ScaleInvariant;
+                            projector.size = new Vector3(size, size, 1.0f);
+                
+                            projector.material = new Material(splatterDecalMaterial);
+                            projector.fadeFactor = Random.Range(0.8f, 1.0f);
+
+                            if (projector.material.HasProperty("_DrawOrder"))
+                                projector.material.SetFloat("_DrawOrder", 50);
+
+                            splatterGo.transform.Rotate(Vector3.forward, Random.Range(0f, 360f), Space.Self);
+                            Destroy(splatterGo, 30f);
+                        }
+                    }
+                }
+
+                void CreateWoundDecal(RaycastHit hit, string name, Material mat, float sizeMult, float shotDistance)
+{
         if (mat == null) return;
 
         GameObject decalGo = new GameObject(name);
