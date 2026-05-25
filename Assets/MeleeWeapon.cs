@@ -14,6 +14,7 @@ public class MeleeWeapon : MonoBehaviour
     [Header("Decal Settings")]
     public Material slashDecalMaterial;
     public Material punctureDecalMaterial;
+    public Material environmentSplatterMaterial;
     public float baseDecalSize = 0.2f;
 
     [Header("Wound Orientation")]
@@ -253,9 +254,38 @@ public class MeleeWeapon : MonoBehaviour
                         main.startSpeed = new ParticleSystem.MinMaxCurve(5f * force, 9f * force);
                         main.startSize = new ParticleSystem.MinMaxCurve(0.01f, 0.03f); // Smaller droplets for better look
 
+                        // Environment Splatter: Raycast in the direction of the blood spray
+                        if (environmentSplatterMaterial != null)
+                        {
+                            float splatterMaxDist = 15.0f * force; 
+                            Vector3 currentRayPos = hit.point + sprayDir * 0.05f;
+                            float remainingDist = splatterMaxDist;
+
+                            // Raycast multiple times to find environment behind characters
+                            for (int i = 0; i < 3; i++) // Max 3 steps to avoid infinite loops
+                            {
+                                if (Physics.Raycast(currentRayPos, sprayDir, out RaycastHit envHit, remainingDist))
+                                {
+                                    if (envHit.collider.CompareTag("Dummy") || envHit.collider.CompareTag("Player"))
+                                    {
+                                        // Move ray start past the character and continue
+                                        currentRayPos = envHit.point + sprayDir * 0.1f;
+                                        remainingDist -= envHit.distance + 0.1f;
+                                        if (remainingDist <= 0) break;
+                                        continue;
+                                    }
+                                    
+                                    // Hit environment!
+                                    CreateWoundDecal(envHit, "EnvSplatter", environmentSplatterMaterial, 4.0f * force, Vector3.up, Random.Range(0f, 360f));
+                                    break;
+                                }
+                                else break;
+                            }
+                        }
+                        
                         Destroy(bloodInstance, 2f);
-                    }
-                }
+                        }
+                        }
             }
         }
     }
@@ -266,22 +296,23 @@ public class MeleeWeapon : MonoBehaviour
 
     GameObject decalGo = new GameObject(name);
 
-    float projectionDepth = 1f;
+    float projectionDepth = 0.5f;
+    float effectiveSize = 0.3f * sizeMult;
 
     decalGo.transform.position = hit.point + hit.normal * 0.05f;
     decalGo.transform.rotation = Quaternion.LookRotation(-hit.normal, upDirection);
     decalGo.transform.Rotate(Vector3.forward, rotationOffset, Space.Self);
+    decalGo.transform.localScale = new Vector3(effectiveSize, effectiveSize, projectionDepth);
 
     decalGo.transform.SetParent(hit.collider.transform, true);
-    decalGo.transform.localScale = Vector3.one;
 
     var projector = decalGo.AddComponent<UnityEngine.Rendering.Universal.DecalProjector>();
-    projector.scaleMode = UnityEngine.Rendering.Universal.DecalScaleMode.ScaleInvariant;
+    projector.scaleMode = UnityEngine.Rendering.Universal.DecalScaleMode.InheritFromHierarchy;
     projector.material = new Material(mat);
 
     decalGo.layer = hit.collider.gameObject.layer;
 
-    projector.size = new Vector3(0.3f * sizeMult, 0.3f * sizeMult, projectionDepth);
+    projector.size = new Vector3(1, 1, 1); 
     projector.fadeFactor = 1.0f;
 
     if (projector.material.HasProperty("_DrawOrder"))
