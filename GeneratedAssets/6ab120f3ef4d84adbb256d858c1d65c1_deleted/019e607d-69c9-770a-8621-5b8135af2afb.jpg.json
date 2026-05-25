@@ -1,0 +1,38 @@
+{
+    "asset": "6ab120f3ef4d84adbb256d858c1d65c1",
+    "fileName": "019e607d-69c9-770a-8621-5b8135af2afb.jpg",
+    "prompt": "Blood spatter mist, realistic organic pattern, high contrast deep red, mix of thick blood droplets and very fine mist-like spray, trailing off towards the top, transparent background, top-down view. Variant 2 with different droplet distribution.",
+    "negativePrompt": "",
+    "model": "flux-2-pro",
+    "modelName": "Flux 2 (Pro)",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "refinementMode": "Generation",
+    "pixelateTargetSize": 0,
+    "pixelateKeepImageSize": false,
+    "pixelatePixelBlockSize": 0,
+    "pixelatePixelGridSize": 0,
+    "pixelateMode": 0,
+    "pixelateOutlineThickness": 0,
+    "doodles": {
+        "m_Items": [
+            {
+                "doodleReferenceType": 7,
+                "doodle": [],
+                "label": "Image",
+                "strength": 0.25,
+                "invertStrength": false,
+                "assetReferenceGuid": "6d61fdd663cdc4f0bbe5aa99c98e0fff",
+                "unlabeledIndex": -1
+            }
+        ]
+    },
+    "upscaleFactor": 0,
+    "dimensions": {
+        "width": 1024,
+        "height": 1024
+    },
+    "spriteSheet": false,
+    "duration": 0.0
+}

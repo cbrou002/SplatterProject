@@ -8,12 +8,13 @@ public class ShotgunShoot : MonoBehaviour
     public Camera fpsCamera;
     public float range = 15f;
     public GameObject bloodEffectPrefab;
-    public Material entranceDecalMaterial;
-    public Material exitDecalMaterial;
-    public Material splatterDecalMaterial;
+    public Material[] entranceWoundMaterials;
+    public Material[] exitWoundMaterials;
+    public Material[] entranceSplatterMaterials;
+    public Material[] exitSplatterMaterials;
 
     public AudioSource audioSource;
-    public AudioClip shotgunSound;
+public AudioClip shotgunSound;
 
     [Header("Decal Settings")]
     public float baseDecalSize = 0.2f;
@@ -95,7 +96,7 @@ public class ShotgunShoot : MonoBehaviour
                 }
 
                 // 2. Entrance Wound: Exactly where the crosshair is aimed
-                CreateWoundDecal(hit, "EntranceWound", entranceDecalMaterial, 1.0f, hit.distance);
+                CreateWoundDecal(hit, "EntranceWound", entranceWoundMaterials, 1.0f, hit.distance);
 
                 // 3. Exit Wound Logic
                 // To find the exit point, we cast a ray from far ahead back towards the impact.
@@ -127,22 +128,22 @@ public class ShotgunShoot : MonoBehaviour
                     // Ensure the exit is actually behind the entrance and has some thickness
                     if (Vector3.Distance(hit.point, exitHit.point) > 0.02f)
                     {
-                        CreateWoundDecal(exitHit, "ExitWound", exitDecalMaterial, exitWoundMultiplier, hit.distance);
+                        CreateWoundDecal(exitHit, "ExitWound", exitWoundMaterials, exitWoundMultiplier, hit.distance);
                         
                         // Exit Splatter: More concentrated (0.1 spread), long range (20m)
-                        CreateSplatter(exitHit.point, ray.direction, 0.1f, 20f);
+                        CreateSplatter(exitHit.point, ray.direction, 0.1f, 20f, exitSplatterMaterials);
                     }
                 }
 
                 // Entrance Splatter: More spread (0.4) but short range (4m) to hit floor/ceiling nearby
-                CreateSplatter(hit.point, -ray.direction, 0.4f, 4f);
+                CreateSplatter(hit.point, -ray.direction, 0.4f, 4f, entranceSplatterMaterials);
                 }
                 }
                 }
 
-                void CreateSplatter(Vector3 origin, Vector3 direction, float spread, float distance)
+                void CreateSplatter(Vector3 origin, Vector3 direction, float spread, float distance, Material[] materials)
                 {
-                    if (splatterDecalMaterial == null) return;
+                    if (materials == null || materials.Length == 0) return;
 
                     // Create multiple splatters in a cone for better coverage
                     int splatterCount = 3;
@@ -165,6 +166,8 @@ public class ShotgunShoot : MonoBehaviour
 
                             GameObject splatterGo = new GameObject("SplatterDecal");
                             splatterGo.transform.position = hit.point + hit.normal * 0.02f;
+                            
+                            // Base orientation: look into the surface
                             splatterGo.transform.rotation = Quaternion.LookRotation(-hit.normal);
                 
                             float size = splatterBaseSize * Random.Range(1.0f, 2.5f);
@@ -173,65 +176,80 @@ public class ShotgunShoot : MonoBehaviour
                             projector.scaleMode = DecalScaleMode.ScaleInvariant;
                             projector.size = new Vector3(size, size, 1.0f);
                 
-                            projector.material = new Material(splatterDecalMaterial);
+                            // Randomly choose from the provided materials
+                            Material selectedMat = materials[Random.Range(0, materials.Length)];
+                            projector.material = new Material(selectedMat);
                             projector.fadeFactor = 1.0f;
 
                             if (projector.material.HasProperty("_DrawOrder"))
-projector.material.SetFloat("_DrawOrder", 50);
+                                projector.material.SetFloat("_DrawOrder", 50);
 
-                            splatterGo.transform.Rotate(Vector3.forward, Random.Range(0f, 360f), Space.Self);
+                            // Directional Alignment Logic:
+                            // We want the 'scattered' part of the decal (which we assume is +Y in texture space)
+                            // to face 'outward' from the center of the cone.
+                            Vector3 radialDir = (sprayDir - direction).normalized;
+                            // Project radialDir onto the plane of the surface hit
+                            Vector3 outwardDir = Vector3.ProjectOnPlane(radialDir, hit.normal).normalized;
+
+                            if (outwardDir.sqrMagnitude > 0.001f)
+                            {
+                                // Align the decal's local 'Up' with the outward direction
+                                splatterGo.transform.rotation = Quaternion.LookRotation(-hit.normal, outwardDir);
+                                
+                                // Add random rotation jitter
+                                splatterGo.transform.Rotate(Vector3.forward, Random.Range(-15f, 15f), Space.Self);
+                            }
+                            else
+                            {
+                                // Fallback to random rotation if we hit exactly in the center
+                                splatterGo.transform.Rotate(Vector3.forward, Random.Range(0f, 360f), Space.Self);
+                            }
+                            
                             Destroy(splatterGo, 30f);
                         }
                     }
                 }
 
-                void CreateWoundDecal(RaycastHit hit, string name, Material mat, float sizeMult, float shotDistance)
-{
-        if (mat == null) return;
+                void CreateWoundDecal(RaycastHit hit, string name, Material[] materials, float sizeMult, float shotDistance)
+                {
+                if (materials == null || materials.Length == 0) return;
 
-        GameObject decalGo = new GameObject(name);
+                GameObject decalGo = new GameObject(name);
         
-        // Size logic
-        float distFactor = 1.0f + (shotDistance / range) * 0.90f;
-        float effectiveSize = baseDecalSize * sizeMult * distFactor;
+                // Size logic
+                float distFactor = 1.0f + (shotDistance / range) * 0.90f;
+                float effectiveSize = baseDecalSize * sizeMult * distFactor;
         
-        // CRITICAL FIX for Left/Right Swap and Skewing:
-        // 1. Set position and rotation in world space first.
-        // 2. Set the scale in world space (before parenting).
-        // 3. Parent with worldPositionStays = true. 
-        // Unity will automatically calculate the correct localScale to maintain world proportions.
+                // Position slightly outside surface, rotate to look INTO the surface
+                float projectionDepth = 0.2f;
+                decalGo.transform.position = hit.point + hit.normal * 0.05f; 
+                decalGo.transform.rotation = Quaternion.LookRotation(-hit.normal);
         
-        // Position slightly outside surface, rotate to look INTO the surface
-        // We want the projection box to be centered such that most of it is inside the mesh.
-        // With a 0.2m depth, positioning it 0.05m outside results in 0.15m of projection depth.
-        float projectionDepth = 0.2f;
-        decalGo.transform.position = hit.point + hit.normal * 0.05f; 
-        decalGo.transform.rotation = Quaternion.LookRotation(-hit.normal);
-        
-        decalGo.transform.localScale = new Vector3(effectiveSize, effectiveSize, projectionDepth);
+                decalGo.transform.localScale = new Vector3(effectiveSize, effectiveSize, projectionDepth);
 
-        // Now parent it - Unity handles the scale compensation.
-        decalGo.transform.SetParent(hit.collider.transform, true);
+                // Now parent it - Unity handles the scale compensation.
+                decalGo.transform.SetParent(hit.collider.transform, true);
 
-        DecalProjector projector = decalGo.AddComponent<DecalProjector>();
-        projector.scaleMode = DecalScaleMode.InheritFromHierarchy;
-        projector.material = new Material(mat);
+                DecalProjector projector = decalGo.AddComponent<DecalProjector>();
+                projector.scaleMode = DecalScaleMode.InheritFromHierarchy;
         
-        // Ensure the decal is on the same layer as the dummy
-        decalGo.layer = hit.collider.gameObject.layer;
-
-        // The projector size should match the transform scale we set.
-        // Note: DecalProjector.size X and Y are width/height, Z is depth.
-        projector.size = new Vector3(1, 1, 1); 
-        projector.fadeFactor = 1.0f;
-
-        // Set high draw order
-        if (projector.material.HasProperty("_DrawOrder"))
-            projector.material.SetFloat("_DrawOrder", 100);
-
-        // Random rotation for variety (rotate around local Z)
-        decalGo.transform.Rotate(Vector3.forward, Random.Range(0f, 360f), Space.Self);
+                // Pick random material
+                Material mat = materials[Random.Range(0, materials.Length)];
+                projector.material = new Material(mat);
         
-        Destroy(decalGo, 60f);
-    }
+                // Ensure the decal is on the same layer as the dummy
+                decalGo.layer = hit.collider.gameObject.layer;
+
+                projector.size = new Vector3(1, 1, 1); 
+                projector.fadeFactor = 1.0f;
+
+                // Set high draw order
+                if (projector.material.HasProperty("_DrawOrder"))
+                projector.material.SetFloat("_DrawOrder", 100);
+
+                // Random rotation for variety (rotate around local Z)
+                decalGo.transform.Rotate(Vector3.forward, Random.Range(0f, 360f), Space.Self);
+        
+                Destroy(decalGo, 60f);
+                }
 }

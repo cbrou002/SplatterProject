@@ -1762,9 +1762,20 @@ MonoBehaviour:
   fpsCamera: {fileID: 2013205451}
   range: 10
   bloodEffectPrefab: {fileID: 1028206983}
-  entranceDecalMaterial: {fileID: 2100000, guid: 4455ec2acbe5e432389f75fe1095e2f2, type: 2}
-  exitDecalMaterial: {fileID: 2100000, guid: 4d0554df90a394b2d98e92d18217081a, type: 2}
-  splatterDecalMaterial: {fileID: 2100000, guid: 0ef3df8a8bb0447ca8b43fb6ba5210d4, type: 2}
+  entranceWoundMaterials:
+  - {fileID: 2100000, guid: 2bbe5bf7a52a24233b257d3aecf3d8cf, type: 2}
+  - {fileID: 2100000, guid: c762fec64536c4fb0b48c70d35d98266, type: 2}
+  - {fileID: 2100000, guid: cd4fa9f31799b4db58438be0c4ab065a, type: 2}
+  exitWoundMaterials:
+  - {fileID: 2100000, guid: 26726d2b9f3d34f209d53cf876c9dfa6, type: 2}
+  - {fileID: 2100000, guid: dba91278a46f64b9283c040ef0640705, type: 2}
+  - {fileID: 2100000, guid: 86078417ae3a647b68e7b47c30198632, type: 2}
+  entranceSplatterMaterials:
+  - {fileID: 2100000, guid: 7f0adf148f03b40959c2a2c923519755, type: 2}
+  - {fileID: 2100000, guid: 2d631cf8fc20747b69e028b769dd2d8b, type: 2}
+  - {fileID: 2100000, guid: 2cea52e0258074655b5ae56cc0c62bb5, type: 2}
+  exitSplatterMaterials:
+  - {fileID: 2100000, guid: 71eb8e1ef76034685b3223b138feb9c0, type: 2}
   audioSource: {fileID: 650777491}
   shotgunSound: {fileID: 8300000, guid: a764377339b869e459f5e53fb9258f73, type: 3}
   baseDecalSize: 0.37

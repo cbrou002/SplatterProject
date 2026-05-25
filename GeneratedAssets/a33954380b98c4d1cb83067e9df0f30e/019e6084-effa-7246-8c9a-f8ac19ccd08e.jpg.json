@@ -1,0 +1,38 @@
+{
+    "asset": "a33954380b98c4d1cb83067e9df0f30e",
+    "fileName": "019e6084-effa-7246-8c9a-f8ac19ccd08e.jpg",
+    "prompt": "Exit wound gunshot impact, large messy exit hole with jagged edges and blood spray, realistic organic texture, deep red, transparent background, top-down view. Variant 1.",
+    "negativePrompt": "",
+    "model": "flux-2-pro",
+    "modelName": "Flux 2 (Pro)",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "refinementMode": "Generation",
+    "pixelateTargetSize": 0,
+    "pixelateKeepImageSize": false,
+    "pixelatePixelBlockSize": 0,
+    "pixelatePixelGridSize": 0,
+    "pixelateMode": 0,
+    "pixelateOutlineThickness": 0,
+    "doodles": {
+        "m_Items": [
+            {
+                "doodleReferenceType": 7,
+                "doodle": [],
+                "label": "Image",
+                "strength": 0.25,
+                "invertStrength": false,
+                "assetReferenceGuid": "6d61fdd663cdc4f0bbe5aa99c98e0fff",
+                "unlabeledIndex": -1
+            }
+        ]
+    },
+    "upscaleFactor": 0,
+    "dimensions": {
+        "width": 1024,
+        "height": 1024
+    },
+    "spriteSheet": false,
+    "duration": 0.0
+}

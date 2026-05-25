@@ -1,0 +1,38 @@
+{
+    "asset": "09db32770a9d24f2c87b234a316041a1",
+    "fileName": "019e6082-4b9d-7de2-8ed2-18006aaac93b.jpg",
+    "prompt": "Shotgun exit wound blood splatter impact, high contrast deep red, heavy central mass with fine droplets radiating outward symmetrically, organic and messy but without long streaks or trails, transparent background, top-down view. High resolution FX texture.",
+    "negativePrompt": "",
+    "model": "flux-2-pro",
+    "modelName": "Flux 2 (Pro)",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "refinementMode": "Generation",
+    "pixelateTargetSize": 0,
+    "pixelateKeepImageSize": false,
+    "pixelatePixelBlockSize": 0,
+    "pixelatePixelGridSize": 0,
+    "pixelateMode": 0,
+    "pixelateOutlineThickness": 0,
+    "doodles": {
+        "m_Items": [
+            {
+                "doodleReferenceType": 7,
+                "doodle": [],
+                "label": "Image",
+                "strength": 0.25,
+                "invertStrength": false,
+                "assetReferenceGuid": "6d61fdd663cdc4f0bbe5aa99c98e0fff",
+                "unlabeledIndex": -1
+            }
+        ]
+    },
+    "upscaleFactor": 0,
+    "dimensions": {
+        "width": 1024,
+        "height": 1024
+    },
+    "spriteSheet": false,
+    "duration": 0.0
+}
