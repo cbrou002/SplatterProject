@@ -1771,9 +1771,8 @@ MonoBehaviour:
   - {fileID: 2100000, guid: dba91278a46f64b9283c040ef0640705, type: 2}
   - {fileID: 2100000, guid: 86078417ae3a647b68e7b47c30198632, type: 2}
   entranceSplatterMaterials:
-  - {fileID: 2100000, guid: 7f0adf148f03b40959c2a2c923519755, type: 2}
-  - {fileID: 2100000, guid: 2d631cf8fc20747b69e028b769dd2d8b, type: 2}
-  - {fileID: 2100000, guid: 2cea52e0258074655b5ae56cc0c62bb5, type: 2}
+  - {fileID: 2100000, guid: d8a1388b6a9544226a0f44a1dc2323b0, type: 2}
+  - {fileID: 2100000, guid: 6615ddfb2dc984502bc06679a627179d, type: 2}
   exitSplatterMaterials:
   - {fileID: 2100000, guid: 71eb8e1ef76034685b3223b138feb9c0, type: 2}
   - {fileID: 2100000, guid: 170f96b2702c04e0bb072b13686687a8, type: 2}

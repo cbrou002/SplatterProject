@@ -131,25 +131,63 @@ public AudioClip shotgunSound;
                         CreateWoundDecal(exitHit, "ExitWound", exitWoundMaterials, exitWoundMultiplier, hit.distance);
                         
                         // Exit Splatter: Extremely tight (0.01 spread)
-                        CreateSplatter(exitHit.point, ray.direction, 0.01f, 20f, exitSplatterMaterials);
-                        }
-                        }
+                        CreateSplatter(exitHit.point, ray.direction, 0.01f, 20f, exitSplatterMaterials, false);
+                    }
+                }
 
-                        // Entrance Splatter: Very tight (0.03 spread)
-                        CreateSplatter(hit.point, -ray.direction, 0.03f, 4f, entranceSplatterMaterials);
-                        }
-                        }
-                        }
+                // Entrance Splatter: Reworked for realism (Backspatter)
+                // 1. Wider cone (0.6) with gravity bias, more droplets (8), shorter range (3m)
+                CreateSplatter(hit.point, -ray.direction, 0.6f, 3f, entranceSplatterMaterials, true);
+                
+                // 2. Add local misting on the target around the wound
+                CreateLocalMist(hit);
+                }
+                }
+                }
 
-                        void CreateSplatter(Vector3 origin, Vector3 direction, float spread, float distance, Material[] materials)
-                        {
-                        if (materials == null || materials.Length == 0) return;
+                void CreateLocalMist(RaycastHit hit)
+                {
+                    if (entranceSplatterMaterials == null || entranceSplatterMaterials.Length == 0) return;
 
-                        // Create multiple splatters in a cone for better coverage
-                        int splatterCount = 3;
+                    GameObject mistGo = new GameObject("EntranceMist");
+                    mistGo.transform.position = hit.point + hit.normal * 0.05f;
+                    mistGo.transform.rotation = Quaternion.LookRotation(-hit.normal);
+                    mistGo.transform.SetParent(hit.collider.transform, true);
+
+                    DecalProjector projector = mistGo.AddComponent<DecalProjector>();
+                    projector.scaleMode = DecalScaleMode.ScaleInvariant;
+                    
+                    float size = baseDecalSize * 4f; // Larger but faint
+                    projector.size = new Vector3(size, size, 0.2f);
+                    
+                    Material mat = new Material(entranceSplatterMaterials[Random.Range(0, entranceSplatterMaterials.Length)]);
+                    projector.material = mat;
+                    projector.fadeFactor = 0.4f; // Faint mist
+
+                    if (mat.HasProperty("_DrawOrder")) mat.SetFloat("_DrawOrder", 90);
+                    
+                    mistGo.transform.Rotate(Vector3.forward, Random.Range(0f, 360f), Space.Self);
+                    Destroy(mistGo, 60f);
+                }
+
+                void CreateSplatter(Vector3 origin, Vector3 direction, float spread, float distance, Material[] materials, bool isEntrance)
+                {
+                    if (materials == null || materials.Length == 0) return;
+
+                    // Create multiple splatters in a cone for better coverage
+                    // Real backspatter is a fine mist, so we use more, smaller droplets for entrance
+                    int splatterCount = isEntrance ? 8 : 3;
+                    
                     for (int i = 0; i < splatterCount; i++)
                     {
                         Vector3 sprayDir = Vector3.Slerp(direction, Random.onUnitSphere, spread).normalized;
+                        
+                        // Add gravity bias for entrance spatter to simulate arc
+                        if (isEntrance)
+                        {
+                            sprayDir = Vector3.Slerp(sprayDir, Vector3.down, 0.3f).normalized;
+                        }
+
                         float rayOffset = 0.1f;
 
                         if (Physics.Raycast(origin + sprayDir * rayOffset, sprayDir, out RaycastHit hit, distance))
@@ -170,7 +208,8 @@ public AudioClip shotgunSound;
                             // Base orientation: look into the surface
                             splatterGo.transform.rotation = Quaternion.LookRotation(-hit.normal);
                 
-                            float size = splatterBaseSize * Random.Range(1.0f, 2.5f);
+                            float sizeMult = isEntrance ? Random.Range(0.4f, 1.2f) : Random.Range(1.0f, 2.5f);
+                            float size = splatterBaseSize * sizeMult;
                 
                             DecalProjector projector = splatterGo.AddComponent<DecalProjector>();
                             projector.scaleMode = DecalScaleMode.ScaleInvariant;
@@ -179,29 +218,22 @@ public AudioClip shotgunSound;
                             // Randomly choose from the provided materials
                             Material selectedMat = materials[Random.Range(0, materials.Length)];
                             projector.material = new Material(selectedMat);
-                            projector.fadeFactor = 1.0f;
+                            projector.fadeFactor = isEntrance ? Random.Range(0.6f, 1.0f) : 1.0f;
 
                             if (projector.material.HasProperty("_DrawOrder"))
                                 projector.material.SetFloat("_DrawOrder", 50);
 
-                            // Directional Alignment Logic:
-                            // We want the 'scattered' part of the decal (which we assume is +Y in texture space)
-                            // to face 'outward' from the center of the cone.
+                            // Directional Alignment Logic
                             Vector3 radialDir = (sprayDir - direction).normalized;
-                            // Project radialDir onto the plane of the surface hit
                             Vector3 outwardDir = Vector3.ProjectOnPlane(radialDir, hit.normal).normalized;
 
                             if (outwardDir.sqrMagnitude > 0.001f)
                             {
-                                // Align the decal's local 'Up' with the outward direction
                                 splatterGo.transform.rotation = Quaternion.LookRotation(-hit.normal, outwardDir);
-                                
-                                // Add random rotation jitter
                                 splatterGo.transform.Rotate(Vector3.forward, Random.Range(-15f, 15f), Space.Self);
                             }
                             else
                             {
-                                // Fallback to random rotation if we hit exactly in the center
                                 splatterGo.transform.Rotate(Vector3.forward, Random.Range(0f, 360f), Space.Self);
                             }
                             
