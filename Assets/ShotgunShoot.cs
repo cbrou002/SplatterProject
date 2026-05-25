@@ -130,23 +130,23 @@ public AudioClip shotgunSound;
                     {
                         CreateWoundDecal(exitHit, "ExitWound", exitWoundMaterials, exitWoundMultiplier, hit.distance);
                         
-                        // Exit Splatter: More concentrated (0.1 spread), long range (20m)
-                        CreateSplatter(exitHit.point, ray.direction, 0.1f, 20f, exitSplatterMaterials);
-                    }
-                }
+                        // Exit Splatter: More concentrated (0.05 spread), long range (20m)
+                        CreateSplatter(exitHit.point, ray.direction, 0.05f, 20f, exitSplatterMaterials);
+                        }
+                        }
 
-                // Entrance Splatter: More spread (0.4) but short range (4m) to hit floor/ceiling nearby
-                CreateSplatter(hit.point, -ray.direction, 0.4f, 4f, entranceSplatterMaterials);
-                }
-                }
-                }
+                        // Entrance Splatter: More spread (0.15) but short range (4m) to hit floor/ceiling nearby
+                        CreateSplatter(hit.point, -ray.direction, 0.15f, 4f, entranceSplatterMaterials);
+                        }
+                        }
+                        }
 
-                void CreateSplatter(Vector3 origin, Vector3 direction, float spread, float distance, Material[] materials)
-                {
-                    if (materials == null || materials.Length == 0) return;
+                        void CreateSplatter(Vector3 origin, Vector3 direction, float spread, float distance, Material[] materials)
+                        {
+                        if (materials == null || materials.Length == 0) return;
 
-                    // Create multiple splatters in a cone for better coverage
-                    int splatterCount = 3;
+                        // Create multiple splatters in a cone for better coverage
+                        int splatterCount = 5;
                     for (int i = 0; i < splatterCount; i++)
                     {
                         Vector3 sprayDir = Vector3.Slerp(direction, Random.onUnitSphere, spread).normalized;
