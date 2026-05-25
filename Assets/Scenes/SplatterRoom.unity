@@ -1784,7 +1784,7 @@ MonoBehaviour:
   splatterDistance: 5
   splatterBaseSize: 1.2
   pelletCount: 1
-  spreadAngle: 1
+  spreadAngle: 0.1
   recoilTransform: {fileID: 0}
   recoilRotation: {x: 15, y: 0, z: 0}
   recoilPosition: {x: 0, y: 0, z: -0.1}

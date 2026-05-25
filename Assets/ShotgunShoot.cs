@@ -27,7 +27,7 @@ public AudioClip shotgunSound;
 
     [Header("Shotgun Settings")]
     public int pelletCount = 8;
-    public float spreadAngle = 3.0f;
+    public float spreadAngle = 0.3f;
 
     [Header("Recoil Settings")]
     public Transform recoilTransform;
