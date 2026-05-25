@@ -1779,7 +1779,7 @@ MonoBehaviour:
   - {fileID: 2100000, guid: e3367dd0add30479f836d495abb29f0b, type: 2}
   audioSource: {fileID: 650777491}
   shotgunSound: {fileID: 8300000, guid: a764377339b869e459f5e53fb9258f73, type: 3}
-  baseDecalSize: 0.37
+  baseDecalSize: 0.3
   spreadIntensity: 5
   exitWoundMultiplier: 1
   splatterDistance: 5

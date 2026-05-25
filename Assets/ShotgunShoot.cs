@@ -162,7 +162,7 @@ public AudioClip shotgunSound;
                     
                     Material mat = new Material(entranceSplatterMaterials[Random.Range(0, entranceSplatterMaterials.Length)]);
                     projector.material = mat;
-                    projector.fadeFactor = 0.4f; // Faint mist
+                    projector.fadeFactor = 1.0f; // Full opacity mist
 
                     if (mat.HasProperty("_DrawOrder")) mat.SetFloat("_DrawOrder", 90);
                     
@@ -218,7 +218,7 @@ public AudioClip shotgunSound;
                             // Randomly choose from the provided materials
                             Material selectedMat = materials[Random.Range(0, materials.Length)];
                             projector.material = new Material(selectedMat);
-                            projector.fadeFactor = isEntrance ? Random.Range(0.6f, 1.0f) : 1.0f;
+                            projector.fadeFactor = 1.0f;
 
                             if (projector.material.HasProperty("_DrawOrder"))
                                 projector.material.SetFloat("_DrawOrder", 50);
