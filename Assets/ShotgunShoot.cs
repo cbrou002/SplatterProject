@@ -83,8 +83,9 @@ public AudioClip shotgunSound;
 
         // Single slug ray from camera center forward
         Ray ray = new Ray(fpsCamera.transform.position, fpsCamera.transform.forward);
+        int rayMask = ~(1 << 3); // Ignore Player layer (3)
 
-        if (Physics.Raycast(ray, out RaycastHit hit, range))
+        if (Physics.Raycast(ray, out RaycastHit hit, range, rayMask))
         {
             Debug.Log($"Raycast hit: {hit.collider.gameObject.name} with tag {hit.collider.tag}");
             if (hit.collider.CompareTag("Dummy"))
@@ -104,7 +105,7 @@ public AudioClip shotgunSound;
                 Vector3 backRayStart = hit.point + ray.direction * 0.5f; 
                 Ray backRay = new Ray(backRayStart, -ray.direction);
                 
-                RaycastHit[] backwardHits = Physics.RaycastAll(backRay, 0.6f);
+                RaycastHit[] backwardHits = Physics.RaycastAll(backRay, 0.6f, rayMask);
                 
                 // CRITICAL FIX: Prioritize the SAME collider for the exit wound to ensure limb wounds appear correctly.
                 // If the bullet passed through the arm, we want the exit hole ON the arm.
@@ -157,6 +158,10 @@ public AudioClip shotgunSound;
                     DecalProjector projector = mistGo.AddComponent<DecalProjector>();
                     projector.scaleMode = DecalScaleMode.ScaleInvariant;
                     
+                    // Ignore Layer 3 (Player) for projection
+                    // Note: renderingLayerMask is 32-bit. Standard layer filtering is done via this property in URP.
+                    projector.renderingLayerMask = ~(1u << 3); 
+                    
                     float size = baseDecalSize * 4f; // Larger but faint
                     projector.size = new Vector3(size, size, 0.2f);
                     
@@ -188,15 +193,16 @@ public AudioClip shotgunSound;
                         }
 
                         float rayOffset = 0.1f;
+                        int rayMask = ~( (1 << 3) | (1 << 2) ); // Ignore Layer 3 (Player) and Layer 2 (Ignore Raycast)
 
-                        if (Physics.Raycast(origin + sprayDir * rayOffset, sprayDir, out RaycastHit hit, distance))
+                        if (Physics.Raycast(origin + sprayDir * rayOffset, sprayDir, out RaycastHit hit, distance, rayMask))
                         {
-                            // Ignore the dummy and the player
-                            if (hit.collider.CompareTag("Dummy") || hit.collider.CompareTag("Player"))
+                            // If we hit the dummy, "pass through"
+                            if (hit.collider.CompareTag("Dummy"))
                             {
-                                if (Physics.Raycast(hit.point + sprayDir * 0.1f, sprayDir, out hit, distance - hit.distance))
+                                if (Physics.Raycast(hit.point + sprayDir * 0.1f, sprayDir, out hit, distance - hit.distance, rayMask))
                                 {
-                                    if (hit.collider.CompareTag("Dummy") || hit.collider.CompareTag("Player")) continue;
+                                    if (hit.collider.CompareTag("Dummy")) continue;
                                 }
                                 else continue;
                             }
@@ -213,6 +219,9 @@ public AudioClip shotgunSound;
                             DecalProjector projector = splatterGo.AddComponent<DecalProjector>();
                             projector.scaleMode = DecalScaleMode.ScaleInvariant;
                             projector.size = new Vector3(size, size, 1.0f);
+                            
+                            // Ignore Layer 3 (Player) for projection
+                            projector.renderingLayerMask = ~(1u << 3); 
                 
                             // Randomly choose from the provided materials
                             Material selectedMat = materials[Random.Range(0, materials.Length)];
@@ -263,6 +272,9 @@ public AudioClip shotgunSound;
 
                 DecalProjector projector = decalGo.AddComponent<DecalProjector>();
                 projector.scaleMode = DecalScaleMode.InheritFromHierarchy;
+                
+                // Ignore Layer 3 (Player) for projection
+                projector.renderingLayerMask = ~(1u << 3); 
         
                 // Pick random material
                 Material mat = materials[Random.Range(0, materials.Length)];

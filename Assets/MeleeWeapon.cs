@@ -244,9 +244,13 @@ public class MeleeWeapon : MonoBehaviour
                                 Vector3 moveDir = nextPos - currentPos;
                                 float moveDist = moveDir.magnitude;
 
-                                if (Physics.Raycast(currentPos, moveDir, out RaycastHit envHit, moveDist))
+                                // Ignore Layer 3 (Player) and Layer 2 (Ignore Raycast)
+                                int rayMask = ~( (1 << 3) | (1 << 2) );
+
+                                if (Physics.Raycast(currentPos, moveDir, out RaycastHit envHit, moveDist, rayMask))
                                 {
-                                    if (envHit.collider.CompareTag("Dummy") || envHit.collider.CompareTag("Player"))
+                                    // If we hit a character (Dummy), "pass through" by moving start point
+                                    if (envHit.collider.CompareTag("Dummy"))
                                     {
                                         currentPos = envHit.point + moveDir.normalized * 0.1f;
                                         continue; 
@@ -282,6 +286,10 @@ public class MeleeWeapon : MonoBehaviour
         decalGo.transform.SetParent(hit.collider.transform, true);
         var projector = decalGo.AddComponent<UnityEngine.Rendering.Universal.DecalProjector>();
         projector.scaleMode = UnityEngine.Rendering.Universal.DecalScaleMode.InheritFromHierarchy;
+        
+        // Ignore Layer 3 (Player) for projection
+        projector.renderingLayerMask = ~(1u << 3); 
+
         projector.material = new Material(mat);
         decalGo.layer = hit.collider.gameObject.layer;
         projector.size = new Vector3(1, 1, 1); 
