@@ -238,10 +238,10 @@ public class MeleeWeapon : MonoBehaviour
                         var emission = ps.emission;
                         var shape = ps.shape;
 
-                        // Count based on force - increased for more impact
+                        // Count based on force - increased for more impact (10x total vs original, 2x vs last)
                         var burst = emission.GetBurst(0);
-                        float baseCount = 35f;
-                        burst.count = new ParticleSystem.MinMaxCurve(baseCount * force, (baseCount + 20f) * force);
+                        float baseCount = 350f; 
+                        burst.count = new ParticleSystem.MinMaxCurve(baseCount * force, (baseCount + 200f) * force);
                         emission.SetBurst(0, burst);
 
                         // Shape and Spread
@@ -251,7 +251,7 @@ public class MeleeWeapon : MonoBehaviour
 
                         // Speed and Travel - droplets fly further with more force
                         main.startSpeed = new ParticleSystem.MinMaxCurve(5f * force, 9f * force);
-                        main.startSize = new ParticleSystem.MinMaxCurve(0.05f, 0.15f); // Smaller droplets for better look
+                        main.startSize = new ParticleSystem.MinMaxCurve(0.01f, 0.03f); // Smaller droplets for better look
 
                         Destroy(bloodInstance, 2f);
                     }
