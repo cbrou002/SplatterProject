@@ -175,8 +175,7 @@ public AudioClip shotgunSound;
                     if (materials == null || materials.Length == 0) return;
 
                     // Create multiple splatters in a cone for better coverage
-                    // Real backspatter is a fine mist, so we use more, smaller droplets for entrance
-                    int splatterCount = isEntrance ? 8 : 3;
+                    int splatterCount = isEntrance ? 5 : 2;
                     
                     for (int i = 0; i < splatterCount; i++)
                     {
