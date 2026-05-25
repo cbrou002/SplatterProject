@@ -254,32 +254,40 @@ public class MeleeWeapon : MonoBehaviour
                         main.startSpeed = new ParticleSystem.MinMaxCurve(5f * force, 9f * force);
                         main.startSize = new ParticleSystem.MinMaxCurve(0.01f, 0.03f); // Smaller droplets for better look
 
-                        // Environment Splatter: Raycast in the direction of the blood spray
+                        // Environment Splatter: Projectile trajectory simulation with gravity
                         if (environmentSplatterMaterial != null)
                         {
-                            float splatterMaxDist = 15.0f * force; 
-                            Vector3 currentRayPos = hit.point + sprayDir * 0.05f;
-                            float remainingDist = splatterMaxDist;
-
-                            // Raycast multiple times to find environment behind characters
-                            for (int i = 0; i < 3; i++) // Max 3 steps to avoid infinite loops
+                            Vector3 currentPos = hit.point + sprayDir * 0.1f;
+                            // Estimate velocity based on particle speed (5-9 * force)
+                            Vector3 velocity = sprayDir * (8.0f * force); 
+                            float timeStep = 0.03f;
+                            float maxLifeTime = 1.5f;
+                            
+                            for (float t = 0; t < maxLifeTime; t += timeStep)
                             {
-                                if (Physics.Raycast(currentRayPos, sprayDir, out RaycastHit envHit, remainingDist))
+                                Vector3 nextPos = currentPos + velocity * timeStep;
+                                Vector3 moveDir = nextPos - currentPos;
+                                float moveDist = moveDir.magnitude;
+
+                                if (Physics.Raycast(currentPos, moveDir, out RaycastHit envHit, moveDist))
                                 {
+                                    // If we hit a character, "pass through" by moving start point
                                     if (envHit.collider.CompareTag("Dummy") || envHit.collider.CompareTag("Player"))
                                     {
-                                        // Move ray start past the character and continue
-                                        currentRayPos = envHit.point + sprayDir * 0.1f;
-                                        remainingDist -= envHit.distance + 0.1f;
-                                        if (remainingDist <= 0) break;
-                                        continue;
+                                        currentPos = envHit.point + moveDir.normalized * 0.1f;
+                                        continue; 
                                     }
-                                    
+
                                     // Hit environment!
                                     CreateWoundDecal(envHit, "EnvSplatter", environmentSplatterMaterial, 4.0f * force, Vector3.up, Random.Range(0f, 360f));
                                     break;
                                 }
-                                else break;
+
+                                currentPos = nextPos;
+                                velocity += Physics.gravity * timeStep; // Apply gravity force
+                                
+                                // Optimization: if we've fallen below the hit point significantly, stop
+                                if (currentPos.y < hit.point.y - 10f) break;
                             }
                         }
                         
