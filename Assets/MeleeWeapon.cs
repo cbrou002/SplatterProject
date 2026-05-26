@@ -7,6 +7,7 @@ public class MeleeWeapon : MonoBehaviour
     public float range = 1.5f;
     public float damage = 20f;
     public GameObject bloodEffectPrefab;
+    public GameObject stabSpewPrefab;
     public Animator animator;
     public AudioSource audioSource;
     public AudioClip hitSound;
@@ -213,6 +214,11 @@ public class MeleeWeapon : MonoBehaviour
                     
                     GameObject bloodInstance = Instantiate(bloodEffectPrefab, hit.point, Quaternion.LookRotation(sprayDir));
                     
+                    if (attackType == AttackType.Stab && stabSpewPrefab != null)
+                    {
+                        Instantiate(stabSpewPrefab, hit.point, Quaternion.LookRotation(hit.normal));
+                    }
+
                     ParticleSystem ps = bloodInstance.GetComponent<ParticleSystem>();
                     if (ps != null)
                     {
