@@ -4849,8 +4849,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 39c4a634284b14a7d9c5d006c6c1af31, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BloodDripDecalSpawner
-  dropletMaterial: {fileID: 2100000, guid: e3367dd0add30479f836d495abb29f0b, type: 2}
-  minSpawnInterval: 0.4
-  maxSpawnInterval: 0.8
-  dropletSize: 0.25
+  dropletMaterial: {fileID: 2100000, guid: 2966ba1746cd24747946c4f978e02f73, type: 2}
+  minSpawnInterval: 0.3
+  maxSpawnInterval: 0.7
+  dropletSize: 0.3
   maxRayDistance: 10

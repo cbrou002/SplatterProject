@@ -25,6 +25,7 @@ public AudioClip shotgunSound;
 
     [Header("Spew Decal Settings")]
     public Material spewDecalMaterial;
+    public Material dripDropletMaterial;
     public float spewDecalSize = 2.4f;
     public float spewInitialSpeed = 8f;
 
@@ -228,8 +229,9 @@ public AudioClip shotgunSound;
 
                         if (Physics.Raycast(origin + sprayDir * rayOffset, sprayDir, out RaycastHit hit, distance, rayMask))
                         {
+                            Debug.Log($"[ShotgunShoot] Splatter hit {hit.collider.name} at {hit.point}");
                             // If we hit the dummy, "pass through"
-                            if (hit.collider.CompareTag("Dummy"))
+if (hit.collider.CompareTag("Dummy"))
                             {
                                 if (Physics.Raycast(hit.point + sprayDir * 0.1f, sprayDir, out hit, distance - hit.distance, rayMask))
                                 {
@@ -275,9 +277,17 @@ public AudioClip shotgunSound;
                             {
                                 splatterGo.transform.Rotate(Vector3.forward, Random.Range(0f, 360f), Space.Self);
                             }
-                            
+
+                            if (!isEntrance && dripDropletMaterial != null)
+                            {
+                                Debug.Log("[ShotgunShoot] Adding BloodWallOoze to exit splatter.");
+                                BloodWallOoze ooze = splatterGo.AddComponent<BloodWallOoze>();
+                                ooze.dropletMaterial = dripDropletMaterial;
+                                ooze.areaSize = size;
+                            }
+
                             Destroy(splatterGo, 30f);
-                        }
+}
                     }
                 }
 
@@ -298,8 +308,16 @@ public AudioClip shotgunSound;
                         projector.material.SetFloat("_DrawOrder", 55);
 
                     decalGo.transform.Rotate(Vector3.forward, Random.Range(0f, 360f), Space.Self);
+
+                    if (dripDropletMaterial != null)
+                    {
+                        BloodWallOoze ooze = decalGo.AddComponent<BloodWallOoze>();
+                        ooze.dropletMaterial = dripDropletMaterial;
+                        ooze.areaSize = spewDecalSize;
+                    }
+
                     Destroy(decalGo, 60f);
-                }
+}
 
                 void CreateWoundDecal(RaycastHit hit, string name, Material[] materials, float sizeMult, float shotDistance)
                 {

@@ -1788,6 +1788,7 @@ MonoBehaviour:
   spreadIntensity: 5
   exitWoundMultiplier: 1
   spewDecalMaterial: {fileID: 2100000, guid: d8a1388b6a9544226a0f44a1dc2323b0, type: 2}
+  dripDropletMaterial: {fileID: 2100000, guid: 2966ba1746cd24747946c4f978e02f73, type: 2}
   spewDecalSize: 2.4
   spewInitialSpeed: 8
   splatterDistance: 15
