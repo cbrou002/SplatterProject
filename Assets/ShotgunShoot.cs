@@ -9,6 +9,7 @@ public class ShotgunShoot : MonoBehaviour
     public float range = 15f;
     public GameObject bloodEffectPrefab;
     public GameObject bloodSpewPrefab;
+    public GameObject woundDripPrefab;
     public Material[] entranceWoundMaterials;
     public Material[] exitWoundMaterials;
     public Material[] entranceSplatterMaterials;
@@ -101,6 +102,18 @@ public AudioClip shotgunSound;
                     Instantiate(bloodSpewPrefab, hit.point, Quaternion.LookRotation(hit.normal));
                 }
 
+                // Entrance Wound Decal (Missing in original logic)
+                CreateWoundDecal(hit, "EntranceWound", entranceWoundMaterials, 1.0f, hit.distance);
+
+                // Entrance Blood Drip
+                if (woundDripPrefab != null)
+                {
+                    Vector3 spawnPos = hit.point + hit.normal * 0.05f;
+                    GameObject dripInstance = Instantiate(woundDripPrefab, spawnPos, Quaternion.identity);
+                    dripInstance.transform.SetParent(hit.collider.transform, true);
+                    Destroy(dripInstance, 12f);
+                }
+
                 // Spew Decal: Add a single decal where the backspatter hits the environment
                 if (spewDecalMaterial != null)
                 {
@@ -162,6 +175,15 @@ public AudioClip shotgunSound;
                         
                         // Exit Splatter: Extremely tight (0.01 spread)
                         CreateSplatter(exitHit.point, ray.direction, 0.01f, 20f, exitSplatterMaterials, false);
+
+                        // Exit Blood Drip
+                        if (woundDripPrefab != null)
+                        {
+                            Vector3 spawnPos = exitHit.point + exitHit.normal * 0.05f;
+                            GameObject dripInstance = Instantiate(woundDripPrefab, spawnPos, Quaternion.identity);
+                            dripInstance.transform.SetParent(exitHit.collider.transform, true);
+                            Destroy(dripInstance, 12f);
+                        }
                         }
                         }
                         }
