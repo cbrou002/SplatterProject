@@ -1786,7 +1786,9 @@ MonoBehaviour:
   baseDecalSize: 0.3
   spreadIntensity: 5
   exitWoundMultiplier: 1
-  splatterDistance: 5
+  spewDecalMaterial: {fileID: 2100000, guid: d8a1388b6a9544226a0f44a1dc2323b0, type: 2}
+  spewDecalSize: 2.4
+  splatterDistance: 15
   splatterBaseSize: 1.2
   pelletCount: 1
   spreadAngle: 0.1

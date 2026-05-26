@@ -22,8 +22,12 @@ public AudioClip shotgunSound;
     public float spreadIntensity = 1.5f;
     public float exitWoundMultiplier = 1.8f;
 
+    [Header("Spew Decal Settings")]
+    public Material spewDecalMaterial;
+    public float spewDecalSize = 2.4f;
+
     [Header("Splatter Settings")]
-    public float splatterDistance = 5f;
+    public float splatterDistance = 15f;
     public float splatterBaseSize = 1.2f;
 
     [Header("Shotgun Settings")]
@@ -91,21 +95,39 @@ public AudioClip shotgunSound;
             Debug.Log($"Raycast hit: {hit.collider.gameObject.name} with tag {hit.collider.tag}");
             if (hit.collider.CompareTag("Dummy"))
             {
-                // 1. Blood Effect: Exactly ONE at the hit point
-                if (bloodEffectPrefab != null)
-                {
-                    Instantiate(bloodEffectPrefab, hit.point + hit.normal * 0.05f, Quaternion.LookRotation(hit.normal));
-                }
-
                 if (bloodSpewPrefab != null)
                 {
                     Instantiate(bloodSpewPrefab, hit.point, Quaternion.LookRotation(hit.normal));
                 }
 
-                // 2. Entrance Wound: Exactly where the crosshair is aimed
-                CreateWoundDecal(hit, "EntranceWound", entranceWoundMaterials, 1.0f, hit.distance);
+                // Spew Decal: Add a single decal where the backspatter hits the environment
+                if (spewDecalMaterial != null)
+                {
+                    Vector3 spewDir = hit.normal;
+                    // Add slight gravity bias to the spew direction
+                    spewDir = Vector3.Slerp(spewDir, Vector3.down, 0.15f).normalized;
+                    
+                    int envMask = ~((1 << 3) | (1 << 2)); // Ignore Player and Ignore Raycast
+                    Debug.Log($"Casting spew ray from {hit.point} in dir {spewDir} with range {splatterDistance}");
+                    if (Physics.Raycast(hit.point + hit.normal * 0.1f, spewDir, out RaycastHit spewHit, splatterDistance, envMask))
+                    {
+                        Debug.Log($"Spew ray hit: {spewHit.collider.gameObject.name} tag: {spewHit.collider.tag}");
+                        if (!spewHit.collider.CompareTag("Dummy"))
+                        {
+                            CreateSpewDecal(spewHit);
+                        }
+                    }
+                    else
+                    {
+                        Debug.Log("Spew ray hit nothing within range");
+                    }
+                }
+                else
+                {
+                    Debug.LogWarning("spewDecalMaterial is NULL");
+                }
 
-                // 3. Exit Wound Logic
+                // 2. Exit Wound Logic
                 // To find the exit point, we cast a ray from far ahead back towards the impact.
                 // We use a shorter buffer (0.5m) to stay closer to the target and avoid hitting distant objects.
                 Vector3 backRayStart = hit.point + ray.direction * 0.5f; 
@@ -140,48 +162,12 @@ public AudioClip shotgunSound;
                         // Exit Splatter: Extremely tight (0.01 spread)
                         CreateSplatter(exitHit.point, ray.direction, 0.01f, 20f, exitSplatterMaterials, false);
                     }
-                }
+                    }
+                    }
+                    }
+                    }
 
-                // Entrance Splatter: Reworked for realism (Backspatter)
-                // 1. Wider cone (0.6) with gravity bias, more droplets (8), shorter range (3m)
-                CreateSplatter(hit.point, -ray.direction, 0.6f, 3f, entranceSplatterMaterials, true);
-                
-                // 2. Add local misting on the target around the wound
-                CreateLocalMist(hit);
-                }
-                }
-                }
-
-                void CreateLocalMist(RaycastHit hit)
-                {
-                    if (entranceSplatterMaterials == null || entranceSplatterMaterials.Length == 0) return;
-
-                    GameObject mistGo = new GameObject("EntranceMist");
-                    mistGo.transform.position = hit.point + hit.normal * 0.05f;
-                    mistGo.transform.rotation = Quaternion.LookRotation(-hit.normal);
-                    mistGo.transform.SetParent(hit.collider.transform, true);
-
-                    DecalProjector projector = mistGo.AddComponent<DecalProjector>();
-                    projector.scaleMode = DecalScaleMode.ScaleInvariant;
-                    
-                    // Ignore Layer 3 (Player) for projection
-                    // Note: renderingLayerMask is 32-bit. Standard layer filtering is done via this property in URP.
-                    projector.renderingLayerMask = ~(1u << 3); 
-                    
-                    float size = baseDecalSize * 4f; // Larger but faint
-                    projector.size = new Vector3(size, size, 0.2f);
-                    
-                    Material mat = new Material(entranceSplatterMaterials[Random.Range(0, entranceSplatterMaterials.Length)]);
-                    projector.material = mat;
-                    projector.fadeFactor = 1.0f; // Full opacity mist
-
-                    if (mat.HasProperty("_DrawOrder")) mat.SetFloat("_DrawOrder", 90);
-                    
-                    mistGo.transform.Rotate(Vector3.forward, Random.Range(0f, 360f), Space.Self);
-                    Destroy(mistGo, 60f);
-                }
-
-                void CreateSplatter(Vector3 origin, Vector3 direction, float spread, float distance, Material[] materials, bool isEntrance)
+                    void CreateSplatter(Vector3 origin, Vector3 direction, float spread, float distance, Material[] materials, bool isEntrance)
                 {
                     if (materials == null || materials.Length == 0) return;
 
@@ -254,6 +240,26 @@ public AudioClip shotgunSound;
                             Destroy(splatterGo, 30f);
                         }
                     }
+                }
+
+                void CreateSpewDecal(RaycastHit hit)
+                {
+                    GameObject decalGo = new GameObject("SpewDecal");
+                    decalGo.transform.position = hit.point + hit.normal * 0.02f;
+                    decalGo.transform.rotation = Quaternion.LookRotation(-hit.normal);
+
+                    DecalProjector projector = decalGo.AddComponent<DecalProjector>();
+                    projector.scaleMode = DecalScaleMode.ScaleInvariant;
+                    projector.size = new Vector3(spewDecalSize, spewDecalSize, 1.0f);
+                    projector.renderingLayerMask = ~(1u << 3); 
+                    projector.material = new Material(spewDecalMaterial);
+                    projector.fadeFactor = 1.0f;
+
+                    if (projector.material.HasProperty("_DrawOrder"))
+                        projector.material.SetFloat("_DrawOrder", 55);
+
+                    decalGo.transform.Rotate(Vector3.forward, Random.Range(0f, 360f), Space.Self);
+                    Destroy(decalGo, 60f);
                 }
 
                 void CreateWoundDecal(RaycastHit hit, string name, Material[] materials, float sizeMult, float shotDistance)
