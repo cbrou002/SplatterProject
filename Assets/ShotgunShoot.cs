@@ -8,6 +8,7 @@ public class ShotgunShoot : MonoBehaviour
     public Camera fpsCamera;
     public float range = 15f;
     public GameObject bloodEffectPrefab;
+    public GameObject bloodSpewPrefab;
     public Material[] entranceWoundMaterials;
     public Material[] exitWoundMaterials;
     public Material[] entranceSplatterMaterials;
@@ -94,6 +95,11 @@ public AudioClip shotgunSound;
                 if (bloodEffectPrefab != null)
                 {
                     Instantiate(bloodEffectPrefab, hit.point + hit.normal * 0.05f, Quaternion.LookRotation(hit.normal));
+                }
+
+                if (bloodSpewPrefab != null)
+                {
+                    Instantiate(bloodSpewPrefab, hit.point, Quaternion.LookRotation(hit.normal));
                 }
 
                 // 2. Entrance Wound: Exactly where the crosshair is aimed

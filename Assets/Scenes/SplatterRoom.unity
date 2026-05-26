@@ -1765,6 +1765,7 @@ MonoBehaviour:
   fpsCamera: {fileID: 2013205451}
   range: 10
   bloodEffectPrefab: {fileID: 1028206983}
+  bloodSpewPrefab: {fileID: 5983770069739963328, guid: ed69121050d7040378a33d6ada47e26f, type: 3}
   entranceWoundMaterials:
   - {fileID: 2100000, guid: 2bbe5bf7a52a24233b257d3aecf3d8cf, type: 2}
   - {fileID: 2100000, guid: c762fec64536c4fb0b48c70d35d98266, type: 2}
