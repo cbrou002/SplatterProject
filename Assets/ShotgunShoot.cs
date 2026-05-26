@@ -25,6 +25,7 @@ public AudioClip shotgunSound;
     [Header("Spew Decal Settings")]
     public Material spewDecalMaterial;
     public float spewDecalSize = 2.4f;
+    public float spewInitialSpeed = 8f;
 
     [Header("Splatter Settings")]
     public float splatterDistance = 15f;
@@ -161,13 +162,29 @@ public AudioClip shotgunSound;
                         
                         // Exit Splatter: Extremely tight (0.01 spread)
                         CreateSplatter(exitHit.point, ray.direction, 0.01f, 20f, exitSplatterMaterials, false);
-                    }
-                    }
-                    }
-                    }
-                    }
+                        }
+                        }
+                        }
+                        }
+                        }
 
-                    void CreateSplatter(Vector3 origin, Vector3 direction, float spread, float distance, Material[] materials, bool isEntrance)
+                        private bool SimulateSpewTrajectory(Vector3 start, Vector3 velocity, float maxTime, float step, int mask, out RaycastHit hit)
+                        {
+                        Vector3 lastPos = start;
+                        for (float t = step; t < maxTime; t += step)
+                        {
+                        Vector3 nextPos = start + velocity * t + 0.5f * Physics.gravity * t * t;
+                        if (Physics.Linecast(lastPos, nextPos, out hit, mask))
+                        {
+                        if (!hit.collider.CompareTag("Dummy")) return true;
+                        }
+                        lastPos = nextPos;
+                        }
+                        hit = default;
+                        return false;
+                        }
+
+                        void CreateSplatter(Vector3 origin, Vector3 direction, float spread, float distance, Material[] materials, bool isEntrance)
                 {
                     if (materials == null || materials.Length == 0) return;
 
