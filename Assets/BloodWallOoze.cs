@@ -53,9 +53,9 @@ else
         Vector3 horizontalAxis = Vector3.Cross(wallNormal, Vector3.up).normalized;
         Vector3 verticalAxis = Vector3.ProjectOnPlane(Vector3.up, wallNormal).normalized;
         
-        Vector3 randomOffset = horizontalAxis * Random.Range(-areaSize * 0.4f, areaSize * 0.4f);
-        randomOffset += verticalAxis * Random.Range(-areaSize * 0.3f, areaSize * 0.3f);
-        
+        Vector3 randomOffset = horizontalAxis * Random.Range(-areaSize * 0.15f, areaSize * 0.15f);
+        randomOffset += verticalAxis * Random.Range(-areaSize * 0.1f, areaSize * 0.1f);
+
         // Position slightly in front of the wall to ensure it's not clipped
         dripGo.transform.position = transform.position + randomOffset + wallNormal * 0.05f;
 
