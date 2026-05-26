@@ -256,7 +256,12 @@ public class MeleeWeapon : MonoBehaviour
                                         continue; 
                                     }
 
-                                    CreateWoundDecal(envHit, "EnvSplatter", environmentSplatterMaterial, 4.0f * force, Vector3.up, Random.Range(0f, 360f));
+                                    // Hit environment!
+                                    float travelDist = Vector3.Distance(hit.point, envHit.point);
+                                    // Scale size up based on distance: base size + 25% increase per meter traveled
+                                    float distanceScale = 1.0f + (travelDist * 0.25f);
+                                    
+                                    CreateWoundDecal(envHit, "EnvSplatter", environmentSplatterMaterial, 4.0f * force * distanceScale, Vector3.up, Random.Range(0f, 360f));
                                     break;
                                 }
 
