@@ -570,10 +570,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MeleeWeapon
   fpsCamera: {fileID: 2013205451}
-  range: 2
+  range: 3.5
   damage: 20
   bloodEffectPrefab: {fileID: 1028206983}
   stabSpewPrefab: {fileID: 5983770069739963328, guid: dff55846de8d947f0b3e23fb7c75e782, type: 3}
+  woundDripPrefab: {fileID: 2232260345092248187, guid: 59bfc16a45c6146ab94c90fc782be001, type: 3}
   animator: {fileID: 0}
   audioSource: {fileID: 711064827}
   hitSound: {fileID: 8300000, guid: a37f44cbf8c2a7443a3c361efa2f233a, type: 3}

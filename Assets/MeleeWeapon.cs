@@ -8,6 +8,7 @@ public class MeleeWeapon : MonoBehaviour
     public float damage = 20f;
     public GameObject bloodEffectPrefab;
     public GameObject stabSpewPrefab;
+    public GameObject woundDripPrefab;
     public Animator animator;
     public AudioSource audioSource;
     public AudioClip hitSound;
@@ -217,6 +218,16 @@ public class MeleeWeapon : MonoBehaviour
                     if (attackType == AttackType.Stab && stabSpewPrefab != null)
                     {
                         Instantiate(stabSpewPrefab, hit.point, Quaternion.LookRotation(hit.normal));
+                    }
+
+                    if (woundDripPrefab != null)
+                    {
+                        // Offset slightly along normal to prevent clipping with mesh
+                        Vector3 spawnPos = hit.point + hit.normal * 0.05f;
+                        GameObject dripInstance = Instantiate(woundDripPrefab, spawnPos, Quaternion.identity);
+                        dripInstance.transform.SetParent(hit.collider.transform, true);
+                        Debug.Log($"Created drip at {spawnPos} parented to {hit.collider.name}");
+                        Destroy(dripInstance, 12f); // Drip for 12 seconds
                     }
 
                     ParticleSystem ps = bloodInstance.GetComponent<ParticleSystem>();
