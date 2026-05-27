@@ -1,0 +1,176 @@
+using UnityEngine;
+using UnityEngine.Rendering.Universal;
+using System.Collections;
+
+public class GrenadeProjectile : MonoBehaviour
+{
+    public float delay = 3f;
+    public float explosionRadius = 5f;
+    public float explosionForce = 700f;
+    public Material[] splatterMaterials;
+    public AudioClip explosionSound;
+
+    private bool hasExploded = false;
+
+    void Start()
+    {
+        StartCoroutine(ExplosionTimer());
+    }
+
+    IEnumerator ExplosionTimer()
+    {
+        yield return new WaitForSeconds(delay);
+        if (!hasExploded) Explode();
+    }
+
+    void Explode()
+    {
+        if (hasExploded) return;
+        hasExploded = true;
+
+        CreateDefaultExplosionEffect();
+
+        // Play sound
+        if (explosionSound != null)
+        {
+            AudioSource.PlayClipAtPoint(explosionSound, transform.position, 1.0f);
+        }
+
+        Collider[] colliders = Physics.OverlapSphere(transform.position, explosionRadius);
+        foreach (Collider hit in colliders)
+        {
+            Rigidbody rb = hit.GetComponent<Rigidbody>();
+            if (rb != null)
+            {
+                rb.AddExplosionForce(explosionForce, transform.position, explosionRadius);
+            }
+
+            if (hit.CompareTag("Dummy"))
+            {
+                SpawnSplattersOnDummy(hit);
+            }
+        }
+
+        // Hide the grenade mesh while the effect plays
+        Renderer[] renderers = GetComponentsInChildren<Renderer>();
+        foreach (var r in renderers) r.enabled = false;
+        
+        Destroy(gameObject, 1.5f); // Destroy after effect and sound
+    }
+
+    void SpawnSplattersOnDummy(Collider dummyCollider)
+    {
+        // Vector pointing from explosion to dummy center
+        Vector3 origin = transform.position;
+        Vector3 targetPoint = dummyCollider.bounds.center;
+        Vector3 explosionToDummyDir = (targetPoint - origin).normalized;
+        
+        // Find a point on the dummy surface
+        if (Physics.Raycast(origin, explosionToDummyDir, out RaycastHit hit, explosionRadius))
+        {
+            if (hit.collider.CompareTag("Dummy") || hit.collider.transform.IsChildOf(dummyCollider.transform))
+            {
+                int splatterCount = Random.Range(6, 12);
+                for (int i = 0; i < splatterCount; i++)
+                {
+                    // Direction with spread: blow blood from explosion past/through dummy
+                    Vector3 sprayDir = Vector3.Slerp(explosionToDummyDir, Random.onUnitSphere, 0.25f).normalized;
+                    
+                    // Start ray from just outside the dummy on the far side or just keep going from the initial hit
+                    // We cast from the hit point further into the environment
+                    float envRayRange = explosionRadius * 2f; 
+                    int envMask = ~(1 << 3); // Ignore Player layer
+
+                    // Raycast past the dummy to find environment (floor/walls/ceiling)
+                    if (Physics.Raycast(hit.point + sprayDir * 0.1f, sprayDir, out RaycastHit envHit, envRayRange, envMask))
+                    {
+                        // Ensure we didn't just hit another part of the dummy
+                        if (!envHit.collider.CompareTag("Dummy") && !envHit.collider.transform.IsChildOf(dummyCollider.transform))
+                        {
+                            CreateSplatter(envHit.point, envHit.normal, envHit.collider.transform);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    void CreateSplatter(Vector3 position, Vector3 normal, Transform parent)
+    {
+        GameObject splatterGo = new GameObject("GrenadeSplatterEnvironment");
+        splatterGo.transform.position = position + normal * 0.02f;
+        splatterGo.transform.rotation = Quaternion.LookRotation(-normal);
+        
+        splatterGo.transform.Rotate(Vector3.forward, Random.Range(0f, 360f), Space.Self);
+        float size = Random.Range(1.5f, 3.0f); // Larger splatters for environment
+        
+        DecalProjector projector = splatterGo.AddComponent<DecalProjector>();
+        projector.size = new Vector3(size, size, 1.0f);
+        projector.scaleMode = DecalScaleMode.ScaleInvariant;
+        
+        if (splatterMaterials != null && splatterMaterials.Length > 0)
+        {
+            projector.material = splatterMaterials[Random.Range(0, splatterMaterials.Length)];
+        }
+        
+        // Parent to hit object (walls/floor)
+        splatterGo.transform.SetParent(parent, true);
+        Destroy(splatterGo, 30f);
+    }
+
+    void CreateDefaultExplosionEffect()
+    {
+        GameObject exp = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        exp.transform.position = transform.position;
+        exp.transform.localScale = Vector3.one * 0.1f;
+        
+        Collider col = exp.GetComponent<Collider>();
+        if (col != null) Destroy(col);
+        
+        Renderer ren = exp.GetComponent<Renderer>();
+        // Using a standard URP shader that supports transparency
+        ren.material = new Material(Shader.Find("Universal Render Pipeline/Unlit"));
+        ren.material.color = new Color(1f, 0.5f, 0f, 1f); // Orange
+        
+        // Set transparent rendering if possible
+        ren.material.SetFloat("_Surface", 1); // 1 is Transparent in many URP shaders
+        ren.material.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+        ren.material.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+        ren.material.SetInt("_ZWrite", 0);
+        ren.material.DisableKeyword("_ALPHATEST_ON");
+        ren.material.EnableKeyword("_ALPHABLEND_ON");
+        ren.material.renderQueue = 3000;
+
+        Light light = exp.AddComponent<Light>();
+        light.color = new Color(1f, 0.5f, 0f);
+        light.range = explosionRadius;
+        light.intensity = 50f;
+        
+        StartCoroutine(AnimateExplosion(exp, light));
+    }
+
+    IEnumerator AnimateExplosion(GameObject obj, Light light)
+    {
+        float duration = 0.4f;
+        float elapsed = 0f;
+        Vector3 startScale = Vector3.one * 0.1f;
+        Vector3 endScale = Vector3.one * (explosionRadius * 0.8f);
+
+        Material mat = obj.GetComponent<Renderer>().material;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / duration;
+            obj.transform.localScale = Vector3.Lerp(startScale, endScale, Mathf.Sin(t * Mathf.PI * 0.5f));
+            light.intensity = Mathf.Lerp(50f, 0f, t);
+            
+            Color c = mat.color;
+            c.a = Mathf.Lerp(1f, 0f, t);
+            mat.color = c;
+
+            yield return null;
+        }
+        Destroy(obj);
+    }
+}

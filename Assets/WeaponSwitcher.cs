@@ -31,6 +31,7 @@ public class WeaponSwitcher : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.Alpha1)) selectedWeapon = 0;
         if (Input.GetKeyDown(KeyCode.Alpha2) && weapons.Length >= 2) selectedWeapon = 1;
+        if (Input.GetKeyDown(KeyCode.Alpha3) && weapons.Length >= 3) selectedWeapon = 2;
 
         if (previousSelectedWeapon != selectedWeapon)
         {

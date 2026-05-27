@@ -1,0 +1,15 @@
+{
+    "asset": "a7225e23bd2054cff9eb8161ba52beb9",
+    "fileName": "019e6a5e-7d05-741a-9d34-7eaa8004929c.wav",
+    "prompt": "Powerful explosion sound effect, loud blast followed by a short ringing and debris falling",
+    "negativePrompt": "",
+    "model": "elevenlabs-sound-effects-v2",
+    "modelName": "ElevenLabs Sound Effects V2",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "duration": 3.0,
+    "autoTrim": false,
+    "hasReference": false,
+    "voice": ""
+}

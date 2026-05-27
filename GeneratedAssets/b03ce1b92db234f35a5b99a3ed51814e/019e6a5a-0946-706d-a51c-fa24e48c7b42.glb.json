@@ -1,0 +1,23 @@
+{
+    "asset": "b03ce1b92db234f35a5b99a3ed51814e",
+    "fileName": "019e6a5a-0946-706d-a51c-fa24e48c7b42.glb",
+    "prompt": "Standard green hand grenade, matte finish, olive drab color, military equipment",
+    "negativePrompt": "",
+    "model": "model3d-tripo-p1",
+    "modelName": "Tripo P1",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "refinementMode": "Generation",
+    "promptImageReferenceGuid": "5a49fc0cc8202418cb3d4bacf8391fde",
+    "modelReferenceGuid": "",
+    "multiviewFrontGuid": "",
+    "multiviewBackGuid": "",
+    "multiviewLeftGuid": "",
+    "multiviewRightGuid": "",
+    "multiviewTopGuid": "",
+    "multiviewBottomGuid": "",
+    "multiviewLeftFrontGuid": "",
+    "multiviewRightFrontGuid": "",
+    "faceLimit": -1
+}
