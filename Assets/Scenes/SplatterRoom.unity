@@ -179,6 +179,52 @@ CapsuleCollider:
   m_Height: 0.030491548
   m_Direction: 2
   m_Center: {x: 0, y: 0, z: 0.0133123435}
+--- !u!1 &202788638
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 202788640}
+  - component: {fileID: 202788639}
+  m_Layer: 0
+  m_Name: BloodDropletManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &202788639
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 202788638}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 359bbf9e4c87b4fdc983deaebd6588c0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BloodDropletPool
+  poolSize: 300
+  dropletMaterial: {fileID: 2100000, guid: 2966ba1746cd24747946c4f978e02f73, type: 2}
+--- !u!4 &202788640
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 202788638}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &254724803
 GameObject:
   m_ObjectHideFlags: 0
@@ -1832,7 +1878,6 @@ MonoBehaviour:
   spreadIntensity: 5
   exitWoundMultiplier: 1
   spewDecalMaterial: {fileID: 2100000, guid: d8a1388b6a9544226a0f44a1dc2323b0, type: 2}
-  dripDropletMaterial: {fileID: 2100000, guid: 2966ba1746cd24747946c4f978e02f73, type: 2}
   spewDecalSize: 2.4
   spewInitialSpeed: 8
   splatterDistance: 15
@@ -2216,3 +2261,4 @@ SceneRoots:
   - {fileID: 3583074834160250387}
   - {fileID: 607961000}
   - {fileID: 1025770557}
+  - {fileID: 202788640}
