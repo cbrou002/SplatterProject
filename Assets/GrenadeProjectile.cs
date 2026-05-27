@@ -8,6 +8,8 @@ public class GrenadeProjectile : MonoBehaviour
     public float explosionRadius = 5f;
     public float explosionForce = 700f;
     public Material[] splatterMaterials;
+    public Material shrapnelEntranceMaterial;
+    public Material shrapnelExitMaterial;
     public AudioClip explosionSound;
 
     private bool hasExploded = false;
@@ -48,6 +50,7 @@ public class GrenadeProjectile : MonoBehaviour
             if (hit.CompareTag("Dummy"))
             {
                 SpawnSplattersOnDummy(hit);
+                SpawnShrapnelOnDummy(hit);
             }
         }
 
@@ -56,6 +59,65 @@ public class GrenadeProjectile : MonoBehaviour
         foreach (var r in renderers) r.enabled = false;
         
         Destroy(gameObject, 1.5f); // Destroy after effect and sound
+    }
+
+    void SpawnShrapnelOnDummy(Collider dummyCollider)
+    {
+        int shrapnelCount = Random.Range(10, 20); // A good amount
+        Vector3 explosionPos = transform.position;
+
+        for (int i = 0; i < shrapnelCount; i++)
+        {
+            // Pick a random point in dummy bounds to aim shrapnel
+            Vector3 targetPoint = dummyCollider.bounds.center + Random.insideUnitSphere * 0.5f;
+            Vector3 shrapnelDir = (targetPoint - explosionPos).normalized;
+
+            // 1. Entrance Wound
+            if (Physics.Raycast(explosionPos, shrapnelDir, out RaycastHit entranceHit, explosionRadius))
+            {
+                if (entranceHit.collider == dummyCollider || entranceHit.collider.transform.IsChildOf(dummyCollider.transform))
+                {
+                    CreateWoundDecal(entranceHit.point, entranceHit.normal, entranceHit.collider.transform, shrapnelEntranceMaterial, Random.Range(0.15f, 0.3f), "ShrapnelEntrance");
+
+                    // 2. Exit Wound Logic
+                    // Cast a ray from further ahead back towards the entrance to find the exit point on the dummy
+                    float bodyThickness = 0.6f; 
+                    Vector3 backRayStart = entranceHit.point + shrapnelDir * bodyThickness;
+                    Ray backRay = new Ray(backRayStart, -shrapnelDir);
+
+                    // We use RaycastAll to find the hit on the dummy that is furthest from backRayStart (which would be the exit point)
+                    RaycastHit[] hits = Physics.RaycastAll(backRay, bodyThickness);
+                    foreach (var h in hits)
+                    {
+                        if (h.collider == dummyCollider || h.collider.transform.IsChildOf(dummyCollider.transform))
+                        {
+                            // Create exit wound on the side facing away from the explosion
+                            // The normal of the exit surface should be pointing outwards
+                            CreateWoundDecal(h.point, h.normal, h.collider.transform, shrapnelExitMaterial, Random.Range(0.25f, 0.45f), "ShrapnelExit");
+                            break; // Just one exit per shrapnel piece
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    void CreateWoundDecal(Vector3 position, Vector3 normal, Transform parent, Material mat, float size, string name)
+    {
+        if (mat == null) return;
+
+        GameObject decalGo = new GameObject(name);
+        decalGo.transform.position = position + normal * 0.01f;
+        decalGo.transform.rotation = Quaternion.LookRotation(-normal);
+        decalGo.transform.Rotate(Vector3.forward, Random.Range(0f, 360f), Space.Self);
+
+        DecalProjector projector = decalGo.AddComponent<DecalProjector>();
+        projector.size = new Vector3(size, size, 0.5f);
+        projector.material = new Material(mat);
+        projector.scaleMode = DecalScaleMode.ScaleInvariant;
+        
+        decalGo.transform.SetParent(parent, true);
+        Destroy(decalGo, 60f);
     }
 
     void SpawnSplattersOnDummy(Collider dummyCollider)

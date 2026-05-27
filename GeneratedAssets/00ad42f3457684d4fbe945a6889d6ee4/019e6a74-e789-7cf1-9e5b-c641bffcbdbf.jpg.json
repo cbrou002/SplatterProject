@@ -1,0 +1,28 @@
+{
+    "asset": "00ad42f3457684d4fbe945a6889d6ee4",
+    "fileName": "019e6a74-e789-7cf1-9e5b-c641bffcbdbf.jpg",
+    "prompt": "A small, jagged blood splatter wound, deep red gore, realistic texture, top-down view, no skin background, isolated on white background",
+    "negativePrompt": "",
+    "model": "flux-2-pro",
+    "modelName": "Flux 2 (Pro)",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "refinementMode": "Generation",
+    "pixelateTargetSize": 0,
+    "pixelateKeepImageSize": false,
+    "pixelatePixelBlockSize": 0,
+    "pixelatePixelGridSize": 0,
+    "pixelateMode": 0,
+    "pixelateOutlineThickness": 0,
+    "doodles": {
+        "m_Items": []
+    },
+    "upscaleFactor": 0,
+    "dimensions": {
+        "width": 1024,
+        "height": 1024
+    },
+    "spriteSheet": false,
+    "duration": 0.0
+}
