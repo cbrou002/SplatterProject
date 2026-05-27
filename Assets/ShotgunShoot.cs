@@ -25,7 +25,6 @@ public AudioClip shotgunSound;
 
     [Header("Spew Decal Settings")]
     public Material spewDecalMaterial;
-    public Material dripDropletMaterial;
     public float spewDecalSize = 2.4f;
     public float spewInitialSpeed = 8f;
 
@@ -278,46 +277,31 @@ if (hit.collider.CompareTag("Dummy"))
                                 splatterGo.transform.Rotate(Vector3.forward, Random.Range(0f, 360f), Space.Self);
                             }
 
-                            if (!isEntrance && dripDropletMaterial != null)
-                            {
-                                Debug.Log("[ShotgunShoot] Adding BloodWallOoze to exit splatter.");
-                                BloodWallOoze ooze = splatterGo.AddComponent<BloodWallOoze>();
-                                ooze.dropletMaterial = dripDropletMaterial;
-                                ooze.areaSize = size;
+                            Destroy(splatterGo, 30f);
+                            }
+                            }
                             }
 
-                            Destroy(splatterGo, 30f);
-}
-                    }
-                }
+                            void CreateSpewDecal(RaycastHit hit)
+                            {
+                            GameObject decalGo = new GameObject("SpewDecal");
+                            decalGo.transform.position = hit.point + hit.normal * 0.02f;
+                            decalGo.transform.rotation = Quaternion.LookRotation(-hit.normal);
 
-                void CreateSpewDecal(RaycastHit hit)
-                {
-                    GameObject decalGo = new GameObject("SpewDecal");
-                    decalGo.transform.position = hit.point + hit.normal * 0.02f;
-                    decalGo.transform.rotation = Quaternion.LookRotation(-hit.normal);
+                            DecalProjector projector = decalGo.AddComponent<DecalProjector>();
+                            projector.scaleMode = DecalScaleMode.ScaleInvariant;
+                            projector.size = new Vector3(spewDecalSize, spewDecalSize, 1.0f);
+                            projector.renderingLayerMask = ~(1u << 3); 
+                            projector.material = new Material(spewDecalMaterial);
+                            projector.fadeFactor = 1.0f;
 
-                    DecalProjector projector = decalGo.AddComponent<DecalProjector>();
-                    projector.scaleMode = DecalScaleMode.ScaleInvariant;
-                    projector.size = new Vector3(spewDecalSize, spewDecalSize, 1.0f);
-                    projector.renderingLayerMask = ~(1u << 3); 
-                    projector.material = new Material(spewDecalMaterial);
-                    projector.fadeFactor = 1.0f;
+                            if (projector.material.HasProperty("_DrawOrder"))
+                            projector.material.SetFloat("_DrawOrder", 55);
 
-                    if (projector.material.HasProperty("_DrawOrder"))
-                        projector.material.SetFloat("_DrawOrder", 55);
+                            decalGo.transform.Rotate(Vector3.forward, Random.Range(0f, 360f), Space.Self);
 
-                    decalGo.transform.Rotate(Vector3.forward, Random.Range(0f, 360f), Space.Self);
-
-                    if (dripDropletMaterial != null)
-                    {
-                        BloodWallOoze ooze = decalGo.AddComponent<BloodWallOoze>();
-                        ooze.dropletMaterial = dripDropletMaterial;
-                        ooze.areaSize = spewDecalSize;
-                    }
-
-                    Destroy(decalGo, 60f);
-}
+                            Destroy(decalGo, 60f);
+                            }
 
                 void CreateWoundDecal(RaycastHit hit, string name, Material[] materials, float sizeMult, float shotDistance)
                 {
