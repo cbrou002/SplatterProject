@@ -10,6 +10,7 @@ public class GrenadeProjectile : MonoBehaviour
     public Material[] splatterMaterials;
     public Material shrapnelEntranceMaterial;
     public Material shrapnelExitMaterial;
+    public GameObject woundDripPrefab;
     public AudioClip explosionSound;
 
     private bool hasExploded = false;
@@ -79,6 +80,9 @@ public class GrenadeProjectile : MonoBehaviour
                 {
                     CreateWoundDecal(entranceHit.point, entranceHit.normal, entranceHit.collider.transform, shrapnelEntranceMaterial, Random.Range(0.08f, 0.18f), "ShrapnelEntrance");
 
+                    // Spawn Blood Drip for entrance
+                    SpawnBloodDrip(entranceHit.point, entranceHit.normal, entranceHit.collider.transform);
+
                     // 2. Exit Wound Logic
                     // Cast a ray from further ahead back towards the entrance to find the exit point on the dummy
                     float bodyThickness = 0.6f; 
@@ -94,13 +98,28 @@ public class GrenadeProjectile : MonoBehaviour
                             // Create exit wound on the side facing away from the explosion
                             // The normal of the exit surface should be pointing outwards
                             CreateWoundDecal(h.point, h.normal, h.collider.transform, shrapnelExitMaterial, Random.Range(0.15f, 0.3f), "ShrapnelExit");
+                            
+                            // Spawn Blood Drip for exit
+                            SpawnBloodDrip(h.point, h.normal, h.collider.transform);
+
                             break; // Just one exit per shrapnel piece
                         }
                     }
                 }
-            }
-        }
-    }
+                }
+                }
+                }
+
+                void SpawnBloodDrip(Vector3 position, Vector3 normal, Transform parent)
+                {
+                    if (woundDripPrefab != null)
+                    {
+                        Vector3 spawnPos = position + normal * 0.05f;
+                        GameObject dripInstance = Instantiate(woundDripPrefab, spawnPos, Quaternion.identity);
+                        dripInstance.transform.SetParent(parent, true);
+                        Destroy(dripInstance, 12f);
+                    }
+                }
 
     void CreateWoundDecal(Vector3 position, Vector3 normal, Transform parent, Material mat, float size, string name)
     {

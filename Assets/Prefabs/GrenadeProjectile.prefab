@@ -104,6 +104,7 @@ MonoBehaviour:
   - {fileID: 2100000, guid: d9e9f45234c034370b5542cfdb23b34d, type: 2}
   shrapnelEntranceMaterial: {fileID: 2100000, guid: c4cb7ce7c925445409af46043639f1bf, type: 2}
   shrapnelExitMaterial: {fileID: 2100000, guid: 432ea4181577744e4bcb1e57830cfbea, type: 2}
+  woundDripPrefab: {fileID: 2232260345092248187, guid: 59bfc16a45c6146ab94c90fc782be001, type: 3}
   explosionSound: {fileID: 8300000, guid: a7225e23bd2054cff9eb8161ba52beb9, type: 3}
 --- !u!1 &1705791290381967968
 GameObject:
