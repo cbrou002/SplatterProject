@@ -3,8 +3,7 @@ using UnityEngine;
 public class GrenadeWeapon : MonoBehaviour
 {
     public GameObject grenadeProjectilePrefab;
-    public Transform throwPoint;
-    public float throwForce = 8f;
+    public float throwForce = 6f;
 
     void Update()
     {
@@ -18,13 +17,33 @@ public class GrenadeWeapon : MonoBehaviour
     {
         if (grenadeProjectilePrefab == null) return;
 
-        GameObject grenade = Instantiate(grenadeProjectilePrefab, throwPoint.position, throwPoint.rotation);
+        Camera cam = Camera.main;
+        if (cam == null) return;
+
+        // Spawn slightly in front of the camera to avoid sticking
+        Vector3 spawnPos = cam.transform.position + cam.transform.forward * 0.3f;
+
+        GameObject grenade = Instantiate(grenadeProjectilePrefab, spawnPos, cam.transform.rotation);
+        
+        // Ensure the grenade doesn't collide with the player launcher
+        Collider playerCol = cam.GetComponentInParent<Collider>();
+        Collider grenadeCol = grenade.GetComponent<Collider>();
+        if (playerCol != null && grenadeCol != null)
+        {
+            Physics.IgnoreCollision(playerCol, grenadeCol);
+        }
+
         Rigidbody rb = grenade.GetComponent<Rigidbody>();
         if (rb != null)
         {
-            rb.AddForce(throwPoint.forward * throwForce, ForceMode.Impulse);
-            // Add some random torque for rolling effect
-            rb.AddTorque(Random.insideUnitSphere * 5f, ForceMode.Impulse);
+            // Throw exactly in the direction the camera is facing
+            Vector3 throwDir = cam.transform.forward;
+            
+            // Apply force
+            rb.AddForce(throwDir * throwForce, ForceMode.Impulse);
+            
+            // Small random torque for variety
+            rb.AddTorque(Random.insideUnitSphere * 2f, ForceMode.Impulse);
         }
     }
 }
