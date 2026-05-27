@@ -50,8 +50,8 @@ public class BloodDripDecalSpawner : MonoBehaviour
 
             GameObject dropletGo = new GameObject("BloodDroplet_Debug");
             
-            // Position it significantly above the floor to ensure projection depth hits
-            dropletGo.transform.position = hit.point + hit.normal * 0.5f; 
+            // Position it extremely close to the floor to minimize projection volume
+            dropletGo.transform.position = hit.point + hit.normal * 0.01f; 
             dropletGo.transform.rotation = Quaternion.LookRotation(-hit.normal);
             
             dropletGo.transform.Rotate(Vector3.forward, Random.Range(0f, 360f), Space.Self);
@@ -59,10 +59,10 @@ public class BloodDripDecalSpawner : MonoBehaviour
             DecalProjector projector = dropletGo.AddComponent<DecalProjector>();
             projector.scaleMode = DecalScaleMode.ScaleInvariant;
             
-            // INCREASED SIZE FOR VISIBILITY
+            // INCREASED SIZE FOR VISIBILITY, MINIMAL DEPTH TO AVOID DUMMY
             float size = dropletSize * 2.0f * Random.Range(0.8f, 1.2f);
-            projector.size = new Vector3(size, size, 2.0f); // 2 meter projection depth
-            
+            projector.size = new Vector3(size, size, 0.05f); // 0.05 meter projection depth
+
             if (dropletMaterial != null)
             {
                 projector.material = new Material(dropletMaterial);
