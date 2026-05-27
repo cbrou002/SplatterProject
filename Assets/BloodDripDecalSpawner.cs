@@ -44,15 +44,24 @@ public class BloodDripDecalSpawner : MonoBehaviour
         // Ignore Player (3) and Ignore Raycast (2)
         int mask = ~((1 << 3) | (1 << 2));
 
-        RaycastHit[] hits = Physics.RaycastAll(ray, maxRayDistance, mask);
+        // Ignore triggers to ensure we only hit the floor/environment
+        RaycastHit[] hits = Physics.RaycastAll(ray, maxRayDistance, mask, QueryTriggerInteraction.Ignore);
         System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
 
         foreach (var hit in hits)
         {
-            // If we hit the dummy itself, continue the ray downwards
-            if (hit.collider.CompareTag("Dummy") || hit.collider.name.ToLower().Contains("dummy"))
-                continue;
+            // If we hit any part of a Dummy character, continue the ray downwards.
+            Transform root = hit.collider.transform.root;
+            bool isDummy = hit.collider.CompareTag("Dummy") || 
+                           (root != null && root.CompareTag("Dummy")) ||
+                           hit.collider.name.ToLower().Contains("dummy");
 
+            if (isDummy)
+            {
+                continue;
+            }
+
+            // Successfully hit environment!
             float size = dropletSize * 2.0f * Random.Range(0.8f, 1.2f);
             
             // Spawn via pool

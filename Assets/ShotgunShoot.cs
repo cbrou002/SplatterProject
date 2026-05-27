@@ -111,6 +111,7 @@ public AudioClip shotgunSound;
                     Vector3 spawnPos = hit.point + hit.normal * 0.05f;
                     GameObject dripInstance = Instantiate(woundDripPrefab, spawnPos, Quaternion.identity);
                     dripInstance.transform.SetParent(hit.collider.transform, true);
+                    Debug.Log($"[Shotgun] INSTANTIATED BloodDrip at {spawnPos} parented to {hit.collider.name}");
                     Destroy(dripInstance, 12f);
                 }
 
