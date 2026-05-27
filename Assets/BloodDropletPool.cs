@@ -40,8 +40,8 @@ public class BloodDropletPool : MonoBehaviour
             projector.scaleMode = DecalScaleMode.ScaleInvariant;
             projector.size = new Vector3(0.2f, 0.2f, 0.5f);
             
-            // Force rendering on all layers (0xFFFFFFFF)
-            projector.renderingLayerMask = 0xFFFFFFFF;
+            // Ignore Player (Layer 3) for projection
+            projector.renderingLayerMask = ~(1u << 3);
             
             // Ensure the GameObject is on the Default layer
             go.layer = 0;
