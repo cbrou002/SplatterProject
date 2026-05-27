@@ -77,7 +77,7 @@ public class GrenadeProjectile : MonoBehaviour
             {
                 if (entranceHit.collider == dummyCollider || entranceHit.collider.transform.IsChildOf(dummyCollider.transform))
                 {
-                    CreateWoundDecal(entranceHit.point, entranceHit.normal, entranceHit.collider.transform, shrapnelEntranceMaterial, Random.Range(0.15f, 0.3f), "ShrapnelEntrance");
+                    CreateWoundDecal(entranceHit.point, entranceHit.normal, entranceHit.collider.transform, shrapnelEntranceMaterial, Random.Range(0.08f, 0.18f), "ShrapnelEntrance");
 
                     // 2. Exit Wound Logic
                     // Cast a ray from further ahead back towards the entrance to find the exit point on the dummy
@@ -93,7 +93,7 @@ public class GrenadeProjectile : MonoBehaviour
                         {
                             // Create exit wound on the side facing away from the explosion
                             // The normal of the exit surface should be pointing outwards
-                            CreateWoundDecal(h.point, h.normal, h.collider.transform, shrapnelExitMaterial, Random.Range(0.25f, 0.45f), "ShrapnelExit");
+                            CreateWoundDecal(h.point, h.normal, h.collider.transform, shrapnelExitMaterial, Random.Range(0.15f, 0.3f), "ShrapnelExit");
                             break; // Just one exit per shrapnel piece
                         }
                     }
@@ -164,7 +164,7 @@ public class GrenadeProjectile : MonoBehaviour
         splatterGo.transform.rotation = Quaternion.LookRotation(-normal);
         
         splatterGo.transform.Rotate(Vector3.forward, Random.Range(0f, 360f), Space.Self);
-        float size = Random.Range(1.5f, 3.0f); // Larger splatters for environment
+        float size = Random.Range(0.8f, 1.8f); // Smaller splatters for environment
         
         DecalProjector projector = splatterGo.AddComponent<DecalProjector>();
         projector.size = new Vector3(size, size, 1.0f);
