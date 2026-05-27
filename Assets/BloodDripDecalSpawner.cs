@@ -3,7 +3,7 @@ using UnityEngine.Rendering.Universal;
 
 public class BloodDripDecalSpawner : MonoBehaviour
 {
-    public Material dropletMaterial;
+    [Header("Drip Settings")]
     public float minSpawnInterval = 0.5f;
     public float maxSpawnInterval = 1.5f;
     public float dropletSize = 0.2f;
@@ -35,9 +35,13 @@ public class BloodDripDecalSpawner : MonoBehaviour
 
     void SpawnDroplet()
     {
-        // Raycast from slightly above the wound to be safe
-        Ray ray = new Ray(transform.position + Vector3.up * 0.2f, Vector3.down);
+        // Use the pool if available
+        if (BloodDropletPool.Instance == null) return;
+
+        // Raycast from slightly higher to avoid being stuck inside a fallen dummy
+        Ray ray = new Ray(transform.position + Vector3.up * 0.5f, Vector3.down);
         
+        // Ignore Player (3) and Ignore Raycast (2)
         int mask = ~((1 << 3) | (1 << 2));
 
         RaycastHit[] hits = Physics.RaycastAll(ray, maxRayDistance, mask);
@@ -45,37 +49,15 @@ public class BloodDripDecalSpawner : MonoBehaviour
 
         foreach (var hit in hits)
         {
+            // If we hit the dummy itself, continue the ray downwards
             if (hit.collider.CompareTag("Dummy") || hit.collider.name.ToLower().Contains("dummy"))
                 continue;
 
-            GameObject dropletGo = new GameObject("BloodDroplet_Debug");
-            
-            // Position it extremely close to the floor to minimize projection volume
-            dropletGo.transform.position = hit.point + hit.normal * 0.01f; 
-            dropletGo.transform.rotation = Quaternion.LookRotation(-hit.normal);
-            
-            dropletGo.transform.Rotate(Vector3.forward, Random.Range(0f, 360f), Space.Self);
-
-            DecalProjector projector = dropletGo.AddComponent<DecalProjector>();
-            projector.scaleMode = DecalScaleMode.ScaleInvariant;
-            
-            // INCREASED SIZE FOR VISIBILITY, MINIMAL DEPTH TO AVOID DUMMY
             float size = dropletSize * 2.0f * Random.Range(0.8f, 1.2f);
-            projector.size = new Vector3(size, size, 0.05f); // 0.05 meter projection depth
+            
+            // Spawn via pool
+            BloodDropletPool.Instance.SpawnDroplet(hit.point, hit.normal, size);
 
-            if (dropletMaterial != null)
-            {
-                projector.material = new Material(dropletMaterial);
-                if (projector.material.HasProperty("_DrawOrder"))
-                    projector.material.SetFloat("_DrawOrder", 200);
-            }
-
-            // Ensure it's on the default layer
-            dropletGo.layer = 0;
-
-            Debug.Log($"[BloodDrip] Spawned DEBUG droplet at {hit.point} on {hit.collider.name} Size: {size}");
-
-            Destroy(dropletGo, 45f);
             break; 
         }
     }
