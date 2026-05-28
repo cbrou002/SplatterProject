@@ -4,7 +4,7 @@ using UnityEngine.AI;
 public class StalkerAI : MonoBehaviour
 {
     public Transform target;
-    public float speed = 4.0f;
+    public float speed = 2.0f;
     
     private NavMeshAgent agent;
     private Camera playerCamera;
