@@ -15,6 +15,7 @@ public class ChainsawWeapon : MonoBehaviour
     
     [Header("Visual Effects")]
     public GameObject bloodEffectPrefab;
+    public GameObject bloodBurstPrefab;
     public Material slashDecalMaterial;
     public Material environmentSplatterMaterial;
 
@@ -37,6 +38,7 @@ public class ChainsawWeapon : MonoBehaviour
     public float smoothSpeed = 10f;
     
     private bool isActive = false;
+    private bool wasCutting = false;
     private Vector3 originalLocalPos;
     private Quaternion originalLocalRot;
     private float nextDecalTime = 0f;
@@ -88,6 +90,7 @@ public class ChainsawWeapon : MonoBehaviour
     void SetChainsawActive(bool active)
     {
         isActive = active;
+        if (!active) wasCutting = false;
         if (audioSource != null)
         {
             audioSource.clip = active ? activeClip : idleClip;
@@ -114,6 +117,15 @@ public class ChainsawWeapon : MonoBehaviour
         {
             if (hit.collider.CompareTag("Dummy"))
             {
+                if (!wasCutting)
+                {
+                    if (bloodBurstPrefab != null)
+                    {
+                        Instantiate(bloodBurstPrefab, hit.point, Quaternion.LookRotation(hit.normal));
+                    }
+                    wasCutting = true;
+                }
+
                 Vector3 spewDir = GetSpewDirection(hit.normal);
 
                 // Directional spew (Visual Particles)
@@ -158,10 +170,18 @@ public class ChainsawWeapon : MonoBehaviour
                     }
 
                     nextDecalTime = Time.time + decalFrequency;
-                }
-            }
-        }
-    }
+                    }
+                    }
+                    else
+                    {
+                    wasCutting = false;
+                    }
+                    }
+                    else
+                    {
+                    wasCutting = false;
+                    }
+                    }
 
     void SpawnFineSpew(RaycastHit hit, Vector3 spewDir)
     {
@@ -225,9 +245,9 @@ public class ChainsawWeapon : MonoBehaviour
 
     void SpawnEnvironmentSplatter(RaycastHit hit)
     {
-        // Tighter horizontal and vertical dispersion, matching the new upward/outward spew
-        Vector3 randomDir = (fpsCamera.transform.up * Random.Range(0.5f, 1.0f) + fpsCamera.transform.right * Random.Range(-0.5f, 0.5f)).normalized;
-        Vector3 sprayDir = Vector3.Lerp(hit.normal, randomDir, 0.65f).normalized;
+        // Bias spread downwards for a visceral slung effect, with wider dispersion
+        Vector3 randomDir = (Vector3.down * Random.Range(0.5f, 1.5f) + fpsCamera.transform.right * Random.Range(-1.2f, 1.2f)).normalized;
+        Vector3 sprayDir = Vector3.Lerp(hit.normal, randomDir, 0.7f).normalized;
         
         Vector3 currentPos = hit.point + hit.normal * 0.05f;
         Vector3 velocity = sprayDir * Random.Range(fineSpewMinSpeed, fineSpewMaxSpeed);
