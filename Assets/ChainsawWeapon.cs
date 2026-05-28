@@ -21,11 +21,12 @@ public class ChainsawWeapon : MonoBehaviour
     [Header("Fine Spew Settings")]
     public Material[] fineSpewMaterials;
     public int fineSpewPerHit = 3;
-    public float fineSpewSpread = 0.15f;
-    public float fineSpewMinSize = 0.4f;
-    public float fineSpewMaxSize = 0.9f;
-    public float fineSpewMinSpeed = 8f;
-    public float fineSpewMaxSpeed = 15f;
+    public float fineSpewSpread = 0.06f;
+    public float fineSpewMinSize = 1.0f;
+    public float fineSpewMaxSize = 2.4f;
+    public float fineSpewMinSpeed = 5f;
+    public float fineSpewMaxSpeed = 10f;
+    public float gravityMultiplier = 1.0f;
 
     public GameObject woundDripPrefab;
     public float decalFrequency = 0.1f;
@@ -100,6 +101,12 @@ public class ChainsawWeapon : MonoBehaviour
         transform.localPosition = Vector3.Lerp(transform.localPosition, targetPos, Time.deltaTime * smoothSpeed);
     }
 
+    Vector3 GetSpewDirection(Vector3 hitNormal)
+    {
+        // Direction based on chainsaw contact, slightly biased upwards for spray effect
+        return Vector3.Lerp(hitNormal, fpsCamera.transform.up, 0.3f).normalized;
+    }
+
     void ProcessCutting()
     {
         RaycastHit hit;
@@ -107,11 +114,12 @@ public class ChainsawWeapon : MonoBehaviour
         {
             if (hit.collider.CompareTag("Dummy"))
             {
-                // Directional spew
+                Vector3 spewDir = GetSpewDirection(hit.normal);
+
+                // Directional spew (Visual Particles)
                 if (bloodEffectPrefab != null && Time.frameCount % 5 == 0) // Limit frequency of particle spawn
                 {
-                    Vector3 sprayDir = Vector3.Lerp(hit.normal, fpsCamera.transform.up, 0.3f).normalized;
-                    GameObject blood = Instantiate(bloodEffectPrefab, hit.point, Quaternion.LookRotation(sprayDir));
+                    GameObject blood = Instantiate(bloodEffectPrefab, hit.point, Quaternion.LookRotation(spewDir));
                     
                     ParticleSystem ps = blood.GetComponent<ParticleSystem>();
                     if (ps != null)
@@ -119,8 +127,9 @@ public class ChainsawWeapon : MonoBehaviour
                         var main = ps.main;
                         var shape = ps.shape;
                         shape.shapeType = ParticleSystemShapeType.Cone;
-                        shape.angle = 45f; // Wide cone
-                        main.startSpeed = new ParticleSystem.MinMaxCurve(3f, 7f);
+                        shape.angle = 15f; // Tightened cone
+                        main.startSpeed = new ParticleSystem.MinMaxCurve(fineSpewMinSpeed, fineSpewMaxSpeed);
+                        main.gravityModifier = gravityMultiplier;
                     }
                     Destroy(blood, 2f);
                 }
@@ -137,7 +146,7 @@ public class ChainsawWeapon : MonoBehaviour
 
                     if (fineSpewMaterials != null && fineSpewMaterials.Length > 0)
                     {
-                        SpawnFineSpew(hit);
+                        SpawnFineSpew(hit, spewDir);
                     }
 
                     if (woundDripPrefab != null && Random.value > 0.5f)
@@ -154,16 +163,13 @@ public class ChainsawWeapon : MonoBehaviour
         }
     }
 
-    void SpawnFineSpew(RaycastHit hit)
+    void SpawnFineSpew(RaycastHit hit, Vector3 spewDir)
     {
-        StartCoroutine(SpewBurst(hit));
+        StartCoroutine(SpewBurst(hit, spewDir));
     }
 
-    IEnumerator SpewBurst(RaycastHit contactHit)
+    IEnumerator SpewBurst(RaycastHit contactHit, Vector3 baseDir)
     {
-        // Direction based on chainsaw contact
-        Vector3 baseDir = Vector3.Lerp(contactHit.normal, fpsCamera.transform.up, 0.3f).normalized;
-        
         for (int i = 0; i < fineSpewPerHit; i++)
         {
             Vector3 randomOffset = new Vector3(
@@ -211,7 +217,7 @@ public class ChainsawWeapon : MonoBehaviour
                 currentPos = nextPos;
             }
 
-            velocity += Physics.gravity * timeStep;
+            velocity += Physics.gravity * gravityMultiplier * timeStep;
             velocity *= 0.98f; // Drag
             yield return new WaitForSeconds(timeStep);
         }
@@ -219,12 +225,12 @@ public class ChainsawWeapon : MonoBehaviour
 
     void SpawnEnvironmentSplatter(RaycastHit hit)
     {
-        // Bias spread downwards for a more visceral "slung" look
-        Vector3 randomDir = (Vector3.down * Random.Range(0.5f, 1.5f) + fpsCamera.transform.right * Random.Range(-1.5f, 1.5f)).normalized;
+        // Tighter horizontal and vertical dispersion, matching the new upward/outward spew
+        Vector3 randomDir = (fpsCamera.transform.up * Random.Range(0.5f, 1.0f) + fpsCamera.transform.right * Random.Range(-0.5f, 0.5f)).normalized;
         Vector3 sprayDir = Vector3.Lerp(hit.normal, randomDir, 0.65f).normalized;
         
         Vector3 currentPos = hit.point + hit.normal * 0.05f;
-        Vector3 velocity = sprayDir * Random.Range(5f, 10f);
+        Vector3 velocity = sprayDir * Random.Range(fineSpewMinSpeed, fineSpewMaxSpeed);
         float timeStep = 0.04f;
         float maxLifeTime = 1.2f;
 
@@ -244,14 +250,12 @@ public class ChainsawWeapon : MonoBehaviour
                     continue;
                 }
 
-                // Increase size range for better visibility
                 CreateSplatterDecal(envHit, "ChainsawSplatter", environmentSplatterMaterial, Random.Range(fineSpewMinSize, fineSpewMaxSize));
-                Debug.Log($"[Chainsaw] Created environment splatter on {envHit.collider.name}");
                 break;
-                }
+            }
 
             currentPos = nextPos;
-            velocity += Physics.gravity * timeStep;
+            velocity += Physics.gravity * gravityMultiplier * timeStep;
             velocity *= 0.98f; // Air resistance
         }
     }
@@ -261,17 +265,14 @@ public class ChainsawWeapon : MonoBehaviour
         if (mat == null) return;
         GameObject decalGo = new GameObject(name);
         
-        // Offset slightly more for large decals to prevent clipping on complex geo
         decalGo.transform.position = hit.point + hit.normal * 0.1f;
         
-        // Stable rotation to avoid issues when normal is parallel to Vector3.up
         Vector3 tangent = Vector3.Cross(hit.normal, Vector3.up);
         if (tangent.sqrMagnitude < 0.001f) tangent = Vector3.Cross(hit.normal, Vector3.right);
         
         decalGo.transform.rotation = Quaternion.LookRotation(-hit.normal, tangent);
         decalGo.transform.Rotate(Vector3.forward, Random.Range(0f, 360f), Space.Self);
         
-        // Increased Z scale (projection depth) for the larger decals
         decalGo.transform.localScale = new Vector3(size, size, 2.0f); 
         decalGo.transform.SetParent(hit.collider.transform, true);
 
@@ -282,9 +283,7 @@ public class ChainsawWeapon : MonoBehaviour
         projector.fadeFactor = 1.0f;
         projector.renderingLayerMask = ~(1u << 3);
 
-        // Ensure it's on the right layer for rendering
         decalGo.layer = hit.collider.gameObject.layer;
-
         Destroy(decalGo, 20f);
     }
 
@@ -294,11 +293,8 @@ public class ChainsawWeapon : MonoBehaviour
 
         GameObject decalGo = new GameObject("ChainsawSlash");
         decalGo.transform.position = hit.point + hit.normal * 0.05f;
-        
-        // Use the camera's up direction for base orientation
         decalGo.transform.rotation = Quaternion.LookRotation(-hit.normal, fpsCamera.transform.up);
         
-        // Apply the rotation offset and a tiny bit of jitter for variety
         float jitter = Random.Range(-5f, 5f);
         decalGo.transform.Rotate(Vector3.forward, decalRotationOffset + jitter, Space.Self);
         
@@ -312,12 +308,11 @@ public class ChainsawWeapon : MonoBehaviour
         projector.size = new Vector3(1, 1, 1);
         projector.fadeFactor = 1.0f;
         
-        // Match the layer of the hit object and set draw order to be visible
         decalGo.layer = hit.collider.gameObject.layer;
         if (projector.material.HasProperty("_DrawOrder"))
             projector.material.SetFloat("_DrawOrder", 100);
             
-        projector.renderingLayerMask = ~(1u << 3); // Ignore Player layer
+        projector.renderingLayerMask = ~(1u << 3);
 
         Destroy(decalGo, 30f);
     }
