@@ -1,0 +1,15 @@
+{
+    "asset": "ef5f2e28c8b5947b08f03e936e2562f6",
+    "fileName": "019e6d95-0fdc-766a-a271-22807ef64d77.wav",
+    "prompt": "EXTREMELY LOUD and aggressive chainsaw engine, ear-piercing mechanical roar, max volume, distorted industrial motor, high-performance motorcycle revving to the absolute redline, visceral, overdriven, constant intense roar, loopable.",
+    "negativePrompt": "",
+    "model": "elevenlabs-sound-effects-v2",
+    "modelName": "ElevenLabs Sound Effects V2",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "duration": 5.0,
+    "autoTrim": false,
+    "hasReference": false,
+    "voice": ""
+}
