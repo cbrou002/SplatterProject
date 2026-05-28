@@ -67,7 +67,7 @@ public class GrenadeProjectile : MonoBehaviour
 
     void SpawnShrapnelOnDummy(Collider dummyCollider)
     {
-        int shrapnelCount = Random.Range(10, 20); // A good amount
+        int shrapnelCount = Random.Range(20, 35); // Increased amount
         Vector3 explosionPos = transform.position;
 
         for (int i = 0; i < shrapnelCount; i++)
