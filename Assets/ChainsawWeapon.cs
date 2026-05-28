@@ -30,7 +30,7 @@ public class ChainsawWeapon : MonoBehaviour
     public float gravityMultiplier = 1.0f;
 
     public GameObject woundDripPrefab;
-    public float decalFrequency = 0.1f;
+    public float decalFrequency = 0.05f;
     public float decalRotationOffset = 0f;
     
     [Header("Animation")]
