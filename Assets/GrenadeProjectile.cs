@@ -170,7 +170,7 @@ public class GrenadeProjectile : MonoBehaviour
                     DecalProjector projector = decalGo.AddComponent<DecalProjector>();
                     projector.scaleMode = DecalScaleMode.ScaleInvariant;
                     
-                    float size = Random.Range(0.6f, 1.2f);
+                    float size = Random.Range(0.4f, 0.8f);
                     projector.size = new Vector3(size, size, 1.0f);
                     projector.material = new Material(spewSplatterMaterial);
                     
@@ -242,7 +242,7 @@ public class GrenadeProjectile : MonoBehaviour
         splatterGo.transform.rotation = Quaternion.LookRotation(-normal);
         
         splatterGo.transform.Rotate(Vector3.forward, Random.Range(0f, 360f), Space.Self);
-        float size = Random.Range(0.8f, 1.8f); // Smaller splatters for environment
+        float size = Random.Range(0.5f, 1.2f); // Smaller splatters for environment
         
         DecalProjector projector = splatterGo.AddComponent<DecalProjector>();
         projector.size = new Vector3(size, size, 1.0f);
