@@ -1,0 +1,28 @@
+{
+    "asset": "0a660b504b9334459bfbe7f7ba8de8e6",
+    "fileName": "019e6d40-8792-7da1-88de-a6cdbce52c72.png",
+    "prompt": "A realistic industrial chainsaw with a bloodstained blade and worn yellow casing, side view, white background, high detail.",
+    "negativePrompt": "",
+    "model": "gemini-3.0-pro",
+    "modelName": "Gemini 3.0 Pro",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "refinementMode": "Generation",
+    "pixelateTargetSize": 0,
+    "pixelateKeepImageSize": false,
+    "pixelatePixelBlockSize": 0,
+    "pixelatePixelGridSize": 0,
+    "pixelateMode": 0,
+    "pixelateOutlineThickness": 0,
+    "doodles": {
+        "m_Items": []
+    },
+    "upscaleFactor": 0,
+    "dimensions": {
+        "width": 1024,
+        "height": 1024
+    },
+    "spriteSheet": false,
+    "duration": 0.0
+}

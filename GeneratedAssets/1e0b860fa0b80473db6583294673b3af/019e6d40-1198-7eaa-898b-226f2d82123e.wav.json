@@ -1,0 +1,15 @@
+{
+    "asset": "1e0b860fa0b80473db6583294673b3af",
+    "fileName": "019e6d40-1198-7eaa-898b-226f2d82123e.wav",
+    "prompt": "Chainsaw engine idling chugging loop sound. Deep mechanical vibrations.",
+    "negativePrompt": "",
+    "model": "elevenlabs-sound-effects-v2",
+    "modelName": "ElevenLabs Sound Effects V2",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "duration": 10.0,
+    "autoTrim": false,
+    "hasReference": false,
+    "voice": ""
+}

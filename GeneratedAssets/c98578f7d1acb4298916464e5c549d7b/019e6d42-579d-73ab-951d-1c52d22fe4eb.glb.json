@@ -1,0 +1,23 @@
+{
+    "asset": "c98578f7d1acb4298916464e5c549d7b",
+    "fileName": "019e6d42-579d-73ab-951d-1c52d22fe4eb.glb",
+    "prompt": "A 3D model of an industrial chainsaw, matching the reference image. Bloodstained blade, worn yellow casing. High fidelity.",
+    "negativePrompt": "",
+    "model": "model3d-tripo-p1",
+    "modelName": "Tripo P1",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "refinementMode": "Generation",
+    "promptImageReferenceGuid": "0a660b504b9334459bfbe7f7ba8de8e6",
+    "modelReferenceGuid": "",
+    "multiviewFrontGuid": "",
+    "multiviewBackGuid": "",
+    "multiviewLeftGuid": "",
+    "multiviewRightGuid": "",
+    "multiviewTopGuid": "",
+    "multiviewBottomGuid": "",
+    "multiviewLeftFrontGuid": "",
+    "multiviewRightFrontGuid": "",
+    "faceLimit": -1
+}
