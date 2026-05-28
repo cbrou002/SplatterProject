@@ -126,14 +126,21 @@ public float activeOffset = 0.5f;
         float jitter = Random.Range(-5f, 5f);
         decalGo.transform.Rotate(Vector3.forward, decalRotationOffset + jitter, Space.Self);
         
-        float size = Random.Range(0.04f, 0.07f);
+        float size = Random.Range(0.12f, 0.24f);
         decalGo.transform.localScale = new Vector3(size, size, 0.5f);
         decalGo.transform.SetParent(hit.collider.transform, true);
 
         var projector = decalGo.AddComponent<DecalProjector>();
+        projector.scaleMode = DecalScaleMode.InheritFromHierarchy;
         projector.material = new Material(slashDecalMaterial);
         projector.size = new Vector3(1, 1, 1);
         projector.fadeFactor = 1.0f;
+        
+        // Match the layer of the hit object and set draw order to be visible
+        decalGo.layer = hit.collider.gameObject.layer;
+        if (projector.material.HasProperty("_DrawOrder"))
+            projector.material.SetFloat("_DrawOrder", 100);
+            
         projector.renderingLayerMask = ~(1u << 3); // Ignore Player layer
 
         Destroy(decalGo, 30f);
