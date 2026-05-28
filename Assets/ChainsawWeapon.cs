@@ -17,6 +17,16 @@ public class ChainsawWeapon : MonoBehaviour
     public GameObject bloodEffectPrefab;
     public Material slashDecalMaterial;
     public Material environmentSplatterMaterial;
+
+    [Header("Fine Spew Settings")]
+    public Material[] fineSpewMaterials;
+    public int fineSpewPerHit = 3;
+    public float fineSpewSpread = 0.15f;
+    public float fineSpewMinSize = 0.4f;
+    public float fineSpewMaxSize = 0.9f;
+    public float fineSpewMinSpeed = 8f;
+    public float fineSpewMaxSpeed = 15f;
+
     public GameObject woundDripPrefab;
     public float decalFrequency = 0.1f;
     public float decalRotationOffset = 0f;
@@ -125,6 +135,11 @@ public class ChainsawWeapon : MonoBehaviour
                         SpawnEnvironmentSplatter(hit);
                     }
 
+                    if (fineSpewMaterials != null && fineSpewMaterials.Length > 0)
+                    {
+                        SpawnFineSpew(hit);
+                    }
+
                     if (woundDripPrefab != null && Random.value > 0.5f)
                     {
                         Vector3 dripPos = hit.point + hit.normal * 0.02f;
@@ -136,6 +151,69 @@ public class ChainsawWeapon : MonoBehaviour
                     nextDecalTime = Time.time + decalFrequency;
                 }
             }
+        }
+    }
+
+    void SpawnFineSpew(RaycastHit hit)
+    {
+        StartCoroutine(SpewBurst(hit));
+    }
+
+    IEnumerator SpewBurst(RaycastHit contactHit)
+    {
+        // Direction based on chainsaw contact
+        Vector3 baseDir = Vector3.Lerp(contactHit.normal, fpsCamera.transform.up, 0.3f).normalized;
+        
+        for (int i = 0; i < fineSpewPerHit; i++)
+        {
+            Vector3 randomOffset = new Vector3(
+                Random.Range(-fineSpewSpread, fineSpewSpread),
+                Random.Range(-fineSpewSpread, fineSpewSpread),
+                Random.Range(-fineSpewSpread, fineSpewSpread)
+            );
+            Vector3 velocityDir = (baseDir + randomOffset).normalized;
+            float speed = Random.Range(fineSpewMinSpeed, fineSpewMaxSpeed);
+            
+            StartCoroutine(SimulateSpewTrajectory(contactHit.point + contactHit.normal * 0.05f, velocityDir * speed));
+            yield return new WaitForSeconds(Random.Range(0.01f, 0.03f));
+        }
+    }
+
+    IEnumerator SimulateSpewTrajectory(Vector3 startPos, Vector3 velocity)
+    {
+        Vector3 currentPos = startPos;
+        float timeStep = 0.03f;
+        float maxTime = 1.2f;
+        int rayMask = ~((1 << 3) | (1 << 2)); // Ignore Player and Ignore Raycast
+
+        for (float t = 0; t < maxTime; t += timeStep)
+        {
+            Vector3 nextPos = currentPos + velocity * timeStep;
+            Vector3 moveDir = nextPos - currentPos;
+            float moveDist = moveDir.magnitude;
+
+            if (Physics.Raycast(currentPos, moveDir, out RaycastHit envHit, moveDist, rayMask))
+            {
+                if (!envHit.collider.CompareTag("Dummy"))
+                {
+                    Material mat = fineSpewMaterials[Random.Range(0, fineSpewMaterials.Length)];
+                    float size = Random.Range(fineSpewMinSize, fineSpewMaxSize);
+                    CreateSplatterDecal(envHit, "FineSpewDecal", mat, size);
+                    yield break;
+                }
+                else
+                {
+                    currentPos = envHit.point + moveDir.normalized * 0.1f;
+                }
+            }
+            else
+            {
+                currentPos = nextPos;
+            }
+
+            velocity += Physics.gravity * timeStep;
+            velocity *= 0.98f; // Drag
+            yield return new WaitForSeconds(timeStep);
         }
     }
 
@@ -167,7 +245,7 @@ public class ChainsawWeapon : MonoBehaviour
                 }
 
                 // Increase size range for better visibility
-                CreateSplatterDecal(envHit, "ChainsawSplatter", environmentSplatterMaterial, Random.Range(0.4f, 0.8f));
+                CreateSplatterDecal(envHit, "ChainsawSplatter", environmentSplatterMaterial, Random.Range(fineSpewMinSize, fineSpewMaxSize));
                 Debug.Log($"[Chainsaw] Created environment splatter on {envHit.collider.name}");
                 break;
                 }
