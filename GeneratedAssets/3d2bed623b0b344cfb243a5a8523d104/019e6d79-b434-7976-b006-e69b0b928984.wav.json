@@ -1,0 +1,15 @@
+{
+    "asset": "3d2bed623b0b344cfb243a5a8523d104",
+    "fileName": "019e6d79-b434-7976-b006-e69b0b928984.wav",
+    "prompt": "Aggressive chainsaw engine sound, powerful industrial motor, sounds like a high-performance motorcycle revving up to the maximum RPM, visceral, loud, mechanical, continuous, loopable.",
+    "negativePrompt": "",
+    "model": "elevenlabs-sound-effects-v2",
+    "modelName": "ElevenLabs Sound Effects V2",
+    "customSeed": -1,
+    "w3CTraceId": "",
+    "feedback": 0,
+    "duration": 5.0,
+    "autoTrim": false,
+    "hasReference": false,
+    "voice": ""
+}
