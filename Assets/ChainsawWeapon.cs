@@ -219,9 +219,9 @@ public class ChainsawWeapon : MonoBehaviour
 
     void SpawnEnvironmentSplatter(RaycastHit hit)
     {
-        // Wider spread for splatter
-        Vector3 randomDir = (fpsCamera.transform.up * Random.Range(0.5f, 1.5f) + fpsCamera.transform.right * Random.Range(-1f, 1f)).normalized;
-        Vector3 sprayDir = Vector3.Lerp(hit.normal, randomDir, 0.6f).normalized;
+        // Bias spread downwards for a more visceral "slung" look
+        Vector3 randomDir = (Vector3.down * Random.Range(0.5f, 1.5f) + fpsCamera.transform.right * Random.Range(-1.5f, 1.5f)).normalized;
+        Vector3 sprayDir = Vector3.Lerp(hit.normal, randomDir, 0.65f).normalized;
         
         Vector3 currentPos = hit.point + hit.normal * 0.05f;
         Vector3 velocity = sprayDir * Random.Range(5f, 10f);
@@ -260,11 +260,19 @@ public class ChainsawWeapon : MonoBehaviour
     {
         if (mat == null) return;
         GameObject decalGo = new GameObject(name);
-        // Place slightly more away from surface to avoid clipping on bumpy geo
-        decalGo.transform.position = hit.point + hit.normal * 0.05f;
-        decalGo.transform.rotation = Quaternion.LookRotation(-hit.normal, Vector3.up);
+        
+        // Offset slightly more for large decals to prevent clipping on complex geo
+        decalGo.transform.position = hit.point + hit.normal * 0.1f;
+        
+        // Stable rotation to avoid issues when normal is parallel to Vector3.up
+        Vector3 tangent = Vector3.Cross(hit.normal, Vector3.up);
+        if (tangent.sqrMagnitude < 0.001f) tangent = Vector3.Cross(hit.normal, Vector3.right);
+        
+        decalGo.transform.rotation = Quaternion.LookRotation(-hit.normal, tangent);
         decalGo.transform.Rotate(Vector3.forward, Random.Range(0f, 360f), Space.Self);
-        decalGo.transform.localScale = new Vector3(size, size, 0.8f); // Slightly deeper projection
+        
+        // Increased Z scale (projection depth) for the larger decals
+        decalGo.transform.localScale = new Vector3(size, size, 2.0f); 
         decalGo.transform.SetParent(hit.collider.transform, true);
 
         var projector = decalGo.AddComponent<DecalProjector>();
