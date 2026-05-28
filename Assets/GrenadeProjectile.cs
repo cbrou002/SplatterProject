@@ -11,6 +11,7 @@ public class GrenadeProjectile : MonoBehaviour
     public Material shrapnelEntranceMaterial;
     public Material shrapnelExitMaterial;
     public GameObject woundDripPrefab;
+    public GameObject bloodSpewPrefab;
     public AudioClip explosionSound;
 
     private bool hasExploded = false;
@@ -83,8 +84,11 @@ public class GrenadeProjectile : MonoBehaviour
                     // Spawn Blood Drip for entrance
                     SpawnBloodDrip(entranceHit.point, entranceHit.normal, entranceHit.collider.transform);
 
+                    // Spawn Blood Spew for entrance
+                    SpawnBloodSpew(entranceHit.point, entranceHit.normal);
+
                     // 2. Exit Wound Logic
-                    // Cast a ray from further ahead back towards the entrance to find the exit point on the dummy
+// Cast a ray from further ahead back towards the entrance to find the exit point on the dummy
                     float bodyThickness = 0.6f; 
                     Vector3 backRayStart = entranceHit.point + shrapnelDir * bodyThickness;
                     Ray backRay = new Ray(backRayStart, -shrapnelDir);
@@ -102,8 +106,11 @@ public class GrenadeProjectile : MonoBehaviour
                             // Spawn Blood Drip for exit
                             SpawnBloodDrip(h.point, h.normal, h.collider.transform);
 
+                            // Spawn Blood Spew for exit
+                            SpawnBloodSpew(h.point, h.normal);
+
                             break; // Just one exit per shrapnel piece
-                        }
+}
                     }
                 }
                 }
@@ -118,6 +125,14 @@ public class GrenadeProjectile : MonoBehaviour
                         GameObject dripInstance = Instantiate(woundDripPrefab, spawnPos, Quaternion.identity);
                         dripInstance.transform.SetParent(parent, true);
                         Destroy(dripInstance, 12f);
+                    }
+                }
+
+                void SpawnBloodSpew(Vector3 position, Vector3 normal)
+                {
+                    if (bloodSpewPrefab != null)
+                    {
+                        Instantiate(bloodSpewPrefab, position, Quaternion.LookRotation(normal));
                     }
                 }
 
