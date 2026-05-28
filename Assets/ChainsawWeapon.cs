@@ -126,7 +126,7 @@ public float activeOffset = 0.5f;
         float jitter = Random.Range(-5f, 5f);
         decalGo.transform.Rotate(Vector3.forward, decalRotationOffset + jitter, Space.Self);
         
-        float size = Random.Range(0.12f, 0.24f);
+        float size = Random.Range(0.168f, 0.336f);
         decalGo.transform.localScale = new Vector3(size, size, 0.5f);
         decalGo.transform.SetParent(hit.collider.transform, true);
 
