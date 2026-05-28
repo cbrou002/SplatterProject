@@ -170,9 +170,21 @@ public class GrenadeProjectile : MonoBehaviour
                     DecalProjector projector = decalGo.AddComponent<DecalProjector>();
                     projector.scaleMode = DecalScaleMode.ScaleInvariant;
                     
+                    float flipX = Random.value > 0.5f ? 1f : -1f;
+                    float flipY = Random.value > 0.5f ? 1f : -1f;
                     float size = Random.Range(0.4f, 0.8f);
-                    projector.size = new Vector3(size, size, 1.0f);
-                    projector.material = new Material(spewSplatterMaterial);
+                    
+                    projector.size = new Vector3(size * flipX, size * flipY, 1.0f);
+                    
+                    Material instance = new Material(spewSplatterMaterial);
+                    if (instance.HasProperty("_BaseColor"))
+                    {
+                        Color c = instance.GetColor("_BaseColor");
+                        float brightness = Random.Range(0.7f, 1.1f);
+                        c.r *= brightness; c.g *= brightness; c.b *= brightness;
+                        instance.SetColor("_BaseColor", c);
+                    }
+                    projector.material = instance;
                     
                     decalGo.transform.Rotate(Vector3.forward, Random.Range(0f, 360f), Space.Self);
                     decalGo.transform.SetParent(hit.collider.transform, true);
@@ -180,23 +192,35 @@ public class GrenadeProjectile : MonoBehaviour
                     Destroy(decalGo, 60f);
                 }
 
-    void CreateWoundDecal(Vector3 position, Vector3 normal, Transform parent, Material mat, float size, string name)
-    {
-        if (mat == null) return;
+                void CreateWoundDecal(Vector3 position, Vector3 normal, Transform parent, Material mat, float size, string name)
+                {
+                if (mat == null) return;
 
-        GameObject decalGo = new GameObject(name);
-        decalGo.transform.position = position + normal * 0.01f;
-        decalGo.transform.rotation = Quaternion.LookRotation(-normal);
-        decalGo.transform.Rotate(Vector3.forward, Random.Range(0f, 360f), Space.Self);
+                GameObject decalGo = new GameObject(name);
+                decalGo.transform.position = position + normal * 0.01f;
+                decalGo.transform.rotation = Quaternion.LookRotation(-normal);
+                decalGo.transform.Rotate(Vector3.forward, Random.Range(0f, 360f), Space.Self);
 
-        DecalProjector projector = decalGo.AddComponent<DecalProjector>();
-        projector.size = new Vector3(size, size, 0.5f);
-        projector.material = new Material(mat);
-        projector.scaleMode = DecalScaleMode.ScaleInvariant;
+                DecalProjector projector = decalGo.AddComponent<DecalProjector>();
         
-        decalGo.transform.SetParent(parent, true);
-        Destroy(decalGo, 60f);
-    }
+                float flipX = Random.value > 0.5f ? 1f : -1f;
+                float flipY = Random.value > 0.5f ? 1f : -1f;
+                projector.size = new Vector3(size * flipX, size * flipY, 0.5f);
+        
+                Material instance = new Material(mat);
+                if (instance.HasProperty("_BaseColor"))
+                {
+                Color c = instance.GetColor("_BaseColor");
+                float brightness = Random.Range(0.8f, 1.2f);
+                c.r *= brightness; c.g *= brightness; c.b *= brightness;
+                instance.SetColor("_BaseColor", c);
+                }
+                projector.material = instance;
+                projector.scaleMode = DecalScaleMode.ScaleInvariant;
+        
+                decalGo.transform.SetParent(parent, true);
+                Destroy(decalGo, 60f);
+                }
 
     void SpawnSplattersOnDummy(Collider dummyCollider)
     {
@@ -242,15 +266,44 @@ public class GrenadeProjectile : MonoBehaviour
         splatterGo.transform.rotation = Quaternion.LookRotation(-normal);
         
         splatterGo.transform.Rotate(Vector3.forward, Random.Range(0f, 360f), Space.Self);
-        float size = Random.Range(0.5f, 1.2f); // Smaller splatters for environment
+        
+        // Add random flip for more variety
+        float flipX = Random.value > 0.5f ? 1f : -1f;
+        float flipY = Random.value > 0.5f ? 1f : -1f;
+        
+        float size = Random.Range(0.8f, 2.0f);
         
         DecalProjector projector = splatterGo.AddComponent<DecalProjector>();
-        projector.size = new Vector3(size, size, 1.0f);
+        projector.size = new Vector3(size * flipX, size * flipY, 1.0f);
         projector.scaleMode = DecalScaleMode.ScaleInvariant;
         
         if (splatterMaterials != null && splatterMaterials.Length > 0)
         {
-            projector.material = splatterMaterials[Random.Range(0, splatterMaterials.Length)];
+            Material mat = splatterMaterials[Random.Range(0, splatterMaterials.Length)];
+            // Create a material instance to allow per-decal color variation
+            Material instance = new Material(mat);
+            
+            // Randomly darken or slightly shift the color
+            if (instance.HasProperty("_BaseColor"))
+            {
+                Color c = instance.GetColor("_BaseColor");
+                float brightness = Random.Range(0.7f, 1.1f);
+                c.r *= brightness;
+                c.g *= brightness;
+                c.b *= brightness;
+                instance.SetColor("_BaseColor", c);
+            }
+            else if (instance.HasProperty("Base_Color")) // Check for alternative naming
+            {
+                Color c = instance.GetColor("Base_Color");
+                float brightness = Random.Range(0.7f, 1.1f);
+                c.r *= brightness;
+                c.g *= brightness;
+                c.b *= brightness;
+                instance.SetColor("Base_Color", c);
+            }
+            
+            projector.material = instance;
         }
         
         // Parent to hit object (walls/floor)

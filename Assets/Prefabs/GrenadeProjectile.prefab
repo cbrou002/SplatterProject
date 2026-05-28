@@ -102,6 +102,8 @@ MonoBehaviour:
   - {fileID: 2100000, guid: 9eb1eaaa0d4b1421784c69fd45dec0af, type: 2}
   - {fileID: 2100000, guid: bc7935386354d41eebcf7b22b4a91159, type: 2}
   - {fileID: 2100000, guid: d9e9f45234c034370b5542cfdb23b34d, type: 2}
+  - {fileID: 2100000, guid: fe2fe2a0e748b45dbae3e03b985e49f1, type: 2}
+  - {fileID: 2100000, guid: 0b94286fb0930463c8cb8104566ca0f8, type: 2}
   shrapnelEntranceMaterial: {fileID: 2100000, guid: c4cb7ce7c925445409af46043639f1bf, type: 2}
   shrapnelExitMaterial: {fileID: 2100000, guid: 432ea4181577744e4bcb1e57830cfbea, type: 2}
   woundDripPrefab: {fileID: 2232260345092248187, guid: 59bfc16a45c6146ab94c90fc782be001, type: 3}
