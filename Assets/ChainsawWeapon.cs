@@ -16,11 +16,13 @@ public class ChainsawWeapon : MonoBehaviour
     [Header("Visual Effects")]
     public GameObject bloodEffectPrefab;
     public Material slashDecalMaterial;
+    public Material environmentSplatterMaterial;
+    public GameObject woundDripPrefab;
     public float decalFrequency = 0.1f;
     public float decalRotationOffset = 0f;
     
     [Header("Animation")]
-public float activeOffset = 0.5f;
+    public float activeOffset = 0.5f;
     public float smoothSpeed = 10f;
     
     private bool isActive = false;
@@ -33,7 +35,7 @@ public float activeOffset = 0.5f;
         originalLocalPos = transform.localPosition;
         originalLocalRot = transform.localRotation;
         if (audioSource != null && idleClip != null)
-{
+        {
             audioSource.clip = idleClip;
             audioSource.loop = true;
             audioSource.Play();
@@ -98,18 +100,106 @@ public float activeOffset = 0.5f;
                 // Directional spew
                 if (bloodEffectPrefab != null && Time.frameCount % 5 == 0) // Limit frequency of particle spawn
                 {
-                    GameObject blood = Instantiate(bloodEffectPrefab, hit.point, Quaternion.LookRotation(hit.normal));
+                    Vector3 sprayDir = Vector3.Lerp(hit.normal, fpsCamera.transform.up, 0.3f).normalized;
+                    GameObject blood = Instantiate(bloodEffectPrefab, hit.point, Quaternion.LookRotation(sprayDir));
+                    
+                    ParticleSystem ps = blood.GetComponent<ParticleSystem>();
+                    if (ps != null)
+                    {
+                        var main = ps.main;
+                        var shape = ps.shape;
+                        shape.shapeType = ParticleSystemShapeType.Cone;
+                        shape.angle = 45f; // Wide cone
+                        main.startSpeed = new ParticleSystem.MinMaxCurve(3f, 7f);
+                    }
                     Destroy(blood, 2f);
                 }
 
-                // Decals
+                // Decals & Splatter
                 if (Time.time >= nextDecalTime)
                 {
                     CreateDecal(hit);
+                    
+                    if (environmentSplatterMaterial != null)
+                    {
+                        SpawnEnvironmentSplatter(hit);
+                    }
+
+                    if (woundDripPrefab != null && Random.value > 0.5f)
+                    {
+                        Vector3 dripPos = hit.point + hit.normal * 0.02f;
+                        GameObject drip = Instantiate(woundDripPrefab, dripPos, Quaternion.identity);
+                        drip.transform.SetParent(hit.collider.transform, true);
+                        Destroy(drip, 15f);
+                    }
+
                     nextDecalTime = Time.time + decalFrequency;
                 }
             }
         }
+    }
+
+    void SpawnEnvironmentSplatter(RaycastHit hit)
+    {
+        // Wider spread for splatter
+        Vector3 randomDir = (fpsCamera.transform.up * Random.Range(0.5f, 1.5f) + fpsCamera.transform.right * Random.Range(-1f, 1f)).normalized;
+        Vector3 sprayDir = Vector3.Lerp(hit.normal, randomDir, 0.6f).normalized;
+        
+        Vector3 currentPos = hit.point + hit.normal * 0.05f;
+        Vector3 velocity = sprayDir * Random.Range(5f, 10f);
+        float timeStep = 0.04f;
+        float maxLifeTime = 1.2f;
+
+        for (float t = 0; t < maxLifeTime; t += timeStep)
+        {
+            Vector3 nextPos = currentPos + velocity * timeStep;
+            Vector3 moveDir = nextPos - currentPos;
+            float moveDist = moveDir.magnitude;
+
+            int rayMask = ~((1 << 3) | (1 << 2));
+
+            if (Physics.Raycast(currentPos, moveDir, out RaycastHit envHit, moveDist, rayMask))
+            {
+                if (envHit.collider.CompareTag("Dummy"))
+                {
+                    currentPos = envHit.point + moveDir.normalized * 0.1f;
+                    continue;
+                }
+
+                // Increase size range for better visibility
+                CreateSplatterDecal(envHit, "ChainsawSplatter", environmentSplatterMaterial, Random.Range(0.4f, 0.8f));
+                Debug.Log($"[Chainsaw] Created environment splatter on {envHit.collider.name}");
+                break;
+                }
+
+            currentPos = nextPos;
+            velocity += Physics.gravity * timeStep;
+            velocity *= 0.98f; // Air resistance
+        }
+    }
+
+    void CreateSplatterDecal(RaycastHit hit, string name, Material mat, float size)
+    {
+        if (mat == null) return;
+        GameObject decalGo = new GameObject(name);
+        // Place slightly more away from surface to avoid clipping on bumpy geo
+        decalGo.transform.position = hit.point + hit.normal * 0.05f;
+        decalGo.transform.rotation = Quaternion.LookRotation(-hit.normal, Vector3.up);
+        decalGo.transform.Rotate(Vector3.forward, Random.Range(0f, 360f), Space.Self);
+        decalGo.transform.localScale = new Vector3(size, size, 0.8f); // Slightly deeper projection
+        decalGo.transform.SetParent(hit.collider.transform, true);
+
+        var projector = decalGo.AddComponent<DecalProjector>();
+        projector.scaleMode = DecalScaleMode.InheritFromHierarchy;
+        projector.material = new Material(mat);
+        projector.size = new Vector3(1, 1, 1);
+        projector.fadeFactor = 1.0f;
+        projector.renderingLayerMask = ~(1u << 3);
+
+        // Ensure it's on the right layer for rendering
+        decalGo.layer = hit.collider.gameObject.layer;
+
+        Destroy(decalGo, 20f);
     }
 
     void CreateDecal(RaycastHit hit)
