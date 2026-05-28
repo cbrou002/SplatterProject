@@ -106,6 +106,8 @@ MonoBehaviour:
   shrapnelExitMaterial: {fileID: 2100000, guid: 432ea4181577744e4bcb1e57830cfbea, type: 2}
   woundDripPrefab: {fileID: 2232260345092248187, guid: 59bfc16a45c6146ab94c90fc782be001, type: 3}
   bloodSpewPrefab: {fileID: 5983770069739963328, guid: ed69121050d7040378a33d6ada47e26f, type: 3}
+  spewSplatterMaterial: {fileID: 2100000, guid: d8a1388b6a9544226a0f44a1dc2323b0, type: 2}
+  spewSplatterDistance: 10
   explosionSound: {fileID: 8300000, guid: a7225e23bd2054cff9eb8161ba52beb9, type: 3}
 --- !u!1 &1705791290381967968
 GameObject:

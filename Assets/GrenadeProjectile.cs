@@ -12,6 +12,8 @@ public class GrenadeProjectile : MonoBehaviour
     public Material shrapnelExitMaterial;
     public GameObject woundDripPrefab;
     public GameObject bloodSpewPrefab;
+    public Material spewSplatterMaterial;
+    public float spewSplatterDistance = 10f;
     public AudioClip explosionSound;
 
     private bool hasExploded = false;
@@ -134,6 +136,48 @@ public class GrenadeProjectile : MonoBehaviour
                     {
                         Instantiate(bloodSpewPrefab, position, Quaternion.LookRotation(normal));
                     }
+
+                    if (spewSplatterMaterial != null)
+                    {
+                        StartCoroutine(DelayedSpewDecal(position, normal));
+                    }
+                }
+
+                IEnumerator DelayedSpewDecal(Vector3 position, Vector3 normal)
+                {
+                    yield return new WaitForSeconds(0.5f);
+                    
+                    Vector3 spewDir = normal;
+                    // Add slight gravity bias like the shotgun/sword
+                    spewDir = Vector3.Slerp(spewDir, Vector3.down, 0.15f).normalized;
+
+                    int envMask = ~((1 << 3) | (1 << 2)); // Ignore Player and Ignore Raycast
+                    if (Physics.Raycast(position + normal * 0.1f, spewDir, out RaycastHit spewHit, spewSplatterDistance, envMask))
+                    {
+                        if (!spewHit.collider.CompareTag("Dummy"))
+                        {
+                            CreateSpewDecal(spewHit);
+                        }
+                    }
+                }
+
+                void CreateSpewDecal(RaycastHit hit)
+                {
+                    GameObject decalGo = new GameObject("GrenadeSpewSplatter");
+                    decalGo.transform.position = hit.point + hit.normal * 0.02f;
+                    decalGo.transform.rotation = Quaternion.LookRotation(-hit.normal);
+
+                    DecalProjector projector = decalGo.AddComponent<DecalProjector>();
+                    projector.scaleMode = DecalScaleMode.ScaleInvariant;
+                    
+                    float size = Random.Range(0.6f, 1.2f);
+                    projector.size = new Vector3(size, size, 1.0f);
+                    projector.material = new Material(spewSplatterMaterial);
+                    
+                    decalGo.transform.Rotate(Vector3.forward, Random.Range(0f, 360f), Space.Self);
+                    decalGo.transform.SetParent(hit.collider.transform, true);
+                    
+                    Destroy(decalGo, 60f);
                 }
 
     void CreateWoundDecal(Vector3 position, Vector3 normal, Transform parent, Material mat, float size, string name)
